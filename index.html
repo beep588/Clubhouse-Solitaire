@@ -3,566 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PC Ultimate Game Hub</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Networked Multiplayer Hub</title>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        :root {
-            --bg: #0f172a; --nav: #1e293b; --accent: #3b82f6; --board: #020617;
-            --cw: 70px; --ch: 100px; --c-gap: 10px;
-        }
-        body { margin: 0; background: var(--bg); color: #f8fafc; font-family: system-ui, sans-serif; overflow: hidden; user-select: none; }
-        .flex-center { display: flex; align-items: center; justify-content: center; }
-        
-        /* Layout */
-        #app { display: flex; height: 100vh; width: 100vw; flex-direction: row; }
-        #sidebar { background: var(--nav); border-right: 1px solid #334155; display: flex; flex-direction: column; width: 250px; overflow-y: auto; z-index: 50; }
-        .nav-btn { padding: 12px 20px; cursor: pointer; border-left: 3px solid transparent; opacity: 0.7; transition: all 0.2s; font-weight: 500; }
-        .nav-btn:hover { opacity: 1; background: rgba(255,255,255,0.05); }
-        .nav-btn.active { opacity: 1; border-color: var(--accent); background: rgba(59,130,246,0.1); color: var(--accent); }
-        
-        /* Main View */
-        #main { flex-grow: 1; position: relative; background: var(--board); }
-        .view { position: absolute; inset: 0; display: none; flex-direction: column; overflow: hidden; }
-        .view.active { display: flex; }
-        .header { padding: 16px; background: rgba(0,0,0,0.6); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
-        .play-area { flex-grow: 1; position: relative; overflow: auto; padding: 20px; }
-        .canvas-container { flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; }
-        canvas { box-shadow: 0 4px 20px rgba(0,0,0,0.5); background: #111; }
-
-        /* Cards */
-        .card { 
-            width: var(--cw); height: var(--ch); border-radius: 6px; position: absolute; 
-            background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.4); 
-            display: flex; flex-direction: column; justify-content: space-between; padding: 4px; box-sizing: border-box; cursor: pointer;
-            transition: transform 0.1s, top 0.2s, left 0.2s;
-        }
-        .card.red { color: #dc2626; } .card.black { color: #0f172a; }
-        .card.back { background: repeating-linear-gradient(45deg, #1e3a8a, #1e3a8a 5px, #172554 5px, #172554 10px); border: 2px solid white; }
-        .card.back > div { display: none; }
-        .card.selected { box-shadow: 0 0 0 3px var(--accent), 0 4px 10px rgba(59,130,246,0.5); transform: translateY(-4px); z-index: 100 !important; }
-        .c-val { font-weight: bold; font-size: 1.1rem; line-height: 1; }
-        .c-suit { font-size: 1.2rem; line-height: 1; }
-        .c-center { font-size: 2.2rem; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); opacity: 0.8; }
-        .c-bot { transform: rotate(180deg); display: flex; flex-direction: column; align-items: center; position: absolute; bottom: 4px; right: 4px; }
-        .c-top { display: flex; flex-direction: column; align-items: center; position: absolute; top: 4px; left: 4px; }
-        .slot { width: var(--cw); height: var(--ch); border: 2px dashed #334155; border-radius: 6px; position: absolute; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #334155; cursor: pointer; }
-
-        /* Grids & Tiles */
-        .grid-board { display: grid; gap: 2px; margin: 0 auto; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 8px; }
-        .grid-cell { display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; transition: transform 0.1s; border-radius: 4px;}
-        .grid-cell:active { transform: scale(0.8); }
-        .grid-cell.sel { box-shadow: inset 0 0 0 3px #fff; }
-        .mj-tile { position: absolute; width: 50px; height: 65px; background: #fef08a; border-radius: 4px; box-shadow: 2px 2px 0 #a16207, 4px 4px 0 #713f12; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; color: #000; transition: transform 0.1s; }
-        .mj-tile.sel { transform: translateY(-4px); box-shadow: 0 0 0 3px var(--accent), 4px 8px 10px rgba(0,0,0,0.5); }
-        .mj-tile.blocked { filter: brightness(0.7); cursor: not-allowed; }
-
-        /* Shared Modal */
-        .modal { position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .modal.active { display: flex; }
-        .modal-box { background: var(--nav); padding: 2rem; border-radius: 12px; text-align: center; border: 1px solid var(--accent); box-shadow: 0 0 30px rgba(59,130,246,0.3); }
+        body { margin: 0; background: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        #lobby { text-align: center; background: #1e293b; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { margin-top: 0; color: #38bdf8; }
+        input { padding: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; margin: 10px 0; text-align: center; }
+        button { background: #0284c7; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin: 5px; transition: background 0.2s; }
+        button:hover { background: #0369a1; }
+        #game-container { display: none; text-align: center; }
+        canvas { background: #000; border: 2px solid #38bdf8; border-radius: 8px; box-shadow: 0 0 20px rgba(56, 189, 248, 0.2); }
+        .status { margin-top: 15px; color: #94a3b8; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div id="app">
-    <nav id="sidebar">
-        <div class="p-5 text-2xl font-black border-b border-slate-700 text-blue-400 tracking-wider">NEXUS<span class="text-white">PC</span></div>
+    <!-- Lobby Menu -->
+    <div id="lobby">
+        <h1>Networked Arcade</h1>
+        <p>Play against a friend on a different device.</p>
         
-        <div class="px-5 py-3 mt-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Card Games</div>
-        <div class="nav-btn active" onclick="app.show('klondike')">Klondike Solitaire</div>
-        <div class="nav-btn" onclick="app.show('freecell')">FreeCell</div>
-        <div class="nav-btn" onclick="app.show('spider')">Spider (1-Suit)</div>
-        <div class="nav-btn" onclick="app.show('tripeaks')">TriPeaks</div>
-        <div class="nav-btn" onclick="app.show('pyramid')">Pyramid</div>
-        
-        <div class="px-5 py-3 mt-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Arcade & Puzzle</div>
-        <div class="nav-btn" onclick="app.show('bubble')">Bubble Shooter</div>
-        <div class="nav-btn" onclick="app.show('jewel')">Jewel Match</div>
-        <div class="nav-btn" onclick="app.show('gravity')">Gravity Blocks</div>
-        <div class="nav-btn" onclick="app.show('gemdrop')">Gem Drop</div>
-        <div class="nav-btn" onclick="app.show('mahjong')">Mahjong</div>
-
-        <div class="px-5 py-3 mt-2 text-xs font-bold text-slate-500 uppercase tracking-widest">2-Player Local</div>
-        <div class="nav-btn" onclick="app.show('dogfight')">Aerial Dogfight</div>
-        <div class="nav-btn" onclick="app.show('pong')">Retro Pong</div>
-    </nav>
-
-    <main id="main">
-        <!-- DOM Views -->
-        <div id="v-klondike" class="view active"><div class="header"><h2>Klondike</h2><button class="bg-blue-600 px-4 py-2 rounded" onclick="Klondike.init()">Restart</button></div><div class="play-area" id="b-klondike"></div></div>
-        <div id="v-freecell" class="view"><div class="header"><h2>FreeCell</h2><button class="bg-blue-600 px-4 py-2 rounded" onclick="FreeCell.init()">Restart</button></div><div class="play-area" id="b-freecell"></div></div>
-        <div id="v-spider" class="view"><div class="header"><h2>Spider</h2><button class="bg-blue-600 px-4 py-2 rounded" onclick="Spider.init()">Restart</button></div><div class="play-area" id="b-spider"></div></div>
-        <div id="v-tripeaks" class="view"><div class="header"><h2>TriPeaks</h2><div id="tp-score" class="text-emerald-400 font-bold">Score: 0</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="TriPeaks.init()">Restart</button></div><div class="play-area" id="b-tripeaks"></div></div>
-        <div id="v-pyramid" class="view"><div class="header"><h2>Pyramid</h2><button class="bg-blue-600 px-4 py-2 rounded" onclick="Pyramid.init()">Restart</button></div><div class="play-area" id="b-pyramid"></div></div>
-        <div id="v-jewel" class="view"><div class="header"><h2>Jewel Match</h2><div id="jw-score" class="text-emerald-400 font-bold">Score: 0</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="Jewel.init()">Restart</button></div><div class="play-area flex-center"><div id="b-jewel" class="grid-board" style="grid-template-columns: repeat(8, 1fr);"></div></div></div>
-        <div id="v-gemdrop" class="view"><div class="header"><h2>Gem Drop</h2><div id="gd-score" class="text-emerald-400 font-bold">Score: 0</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="GemDrop.init()">Restart</button></div><div class="play-area flex-center"><div id="b-gemdrop" class="grid-board" style="grid-template-columns: repeat(12, 1fr);"></div></div></div>
-        <div id="v-mahjong" class="view"><div class="header"><h2>Mahjong</h2><div id="mj-rem" class="text-emerald-400 font-bold">Tiles: 144</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="Mahjong.init()">Restart</button></div><div class="play-area" id="b-mahjong"></div></div>
-        
-        <!-- Canvas Views -->
-        <div id="v-bubble" class="view"><div class="header"><h2>Bubble Shooter (Mouse Aim/Click)</h2><div id="bub-score" class="text-emerald-400 font-bold">Score: 0</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="Bubble.init()">Restart</button></div><div class="canvas-container"><canvas id="c-bubble" width="600" height="800"></canvas></div></div>
-        <div id="v-gravity" class="view"><div class="header"><h2>Gravity Blocks (Arrows: Move/Rotate. Down: Drop)</h2><div id="grav-score" class="text-emerald-400 font-bold">Score: 0</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="Gravity.init()">Restart</button></div><div class="canvas-container"><canvas id="c-gravity" width="300" height="600"></canvas></div></div>
-        <div id="v-dogfight" class="view"><div class="header"><h2>Aerial Dogfight (P1: WASD+Space | P2: Arrows+Enter)</h2><button class="bg-blue-600 px-4 py-2 rounded" onclick="Dogfight.init()">Restart</button></div><div class="canvas-container"><canvas id="c-dogfight" width="1000" height="700"></canvas></div></div>
-        <div id="v-pong" class="view"><div class="header"><h2>Retro Pong (P1: W/S | P2: Up/Down)</h2><div id="pong-score" class="text-emerald-400 font-bold text-2xl">0 - 0</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="Pong.init()">Restart</button></div><div class="canvas-container"><canvas id="c-pong" width="1000" height="600"></canvas></div></div>
-
-        <!-- Global Modal -->
-        <div id="msg-modal" class="modal">
-            <div class="modal-box">
-                <h1 class="text-4xl mb-4 font-bold" id="msg-title">Title</h1>
-                <p class="text-lg text-slate-300 mb-6" id="msg-desc">Desc</p>
-                <button class="bg-blue-600 px-8 py-3 rounded-lg font-bold w-full" onclick="$('msg-modal').classList.remove('active'); app.restartCurrent();">Play Again</button>
-            </div>
+        <div id="host-section">
+            <button onclick="createRoom()">Create Room (Host)</button>
+            <p class="status" id="host-status"></p>
         </div>
-    </main>
-</div>
 
-<script>
-    const $ = id => document.getElementById(id);
-    const $$ = q => document.querySelectorAll(q);
-    const ctx = id => $(id).getContext('2d');
-    
-    // Global Key tracking for arcade games
-    const keys = {};
-    window.onkeydown = e => { keys[e.code] = true; if(['Space','ArrowUp','ArrowDown'].includes(e.code)) e.preventDefault(); };
-    window.onkeyup = e => { keys[e.code] = false; };
+        <hr style="border-color: #334155; margin: 25px 0;">
 
-    const app = {
-        cur: 'klondike', loops: [],
-        show: function(id) {
-            $$('.view, .nav-btn').forEach(el => el.classList.remove('active'));
-            $(`v-${id}`).classList.add('active');
-            event.currentTarget.classList.add('active');
-            this.cur = id;
-            this.loops.forEach(cancelAnimationFrame); this.loops = [];
+        <div id="join-section">
+            <input type="text" id="join-id" placeholder="Enter Room ID" autocomplete="off"><br>
+            <button onclick="joinRoom()" style="background: #10b981;">Join Room</button>
+            <p class="status" id="join-status"></p>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-container">
+        <h2 id="game-title">Waiting for opponent...</h2>
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        <p style="color: #94a3b8;">Controls: W and S keys to move your paddle.</p>
+    </div>
+
+    <script>
+        let peer = null;
+        let connection = null;
+        let isHost = false;
+        
+        // Game State Variables
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let gameState = {
+            p1y: 200, p2y: 200, ballX: 400, ballY: 250, ballVX: 5, ballVY: 5, score1: 0, score2: 0
+        };
+        let myY = 200;
+        let gameLoopInt;
+
+        // Initialize PeerJS for the Host
+        function createRoom() {
+            const roomCode = 'hub-' + Math.floor(Math.random() * 9000 + 1000); // Generates hub-XXXX
+            document.getElementById('host-status').innerText = "Connecting to server...";
             
-            const gmap = {
-                klondike: Klondike, freecell: FreeCell, spider: Spider, tripeaks: TriPeaks, pyramid: Pyramid,
-                jewel: Jewel, gemdrop: GemDrop, mahjong: Mahjong, bubble: Bubble, gravity: Gravity, dogfight: Dogfight, pong: Pong
-            };
-            if(gmap[id]) gmap[id].init();
-        },
-        restartCurrent: function() { this.show(this.cur); },
-        msg: function(t, d, c="text-emerald-400") { $('msg-title').innerText=t; $('msg-title').className=`text-4xl mb-4 font-bold ${c}`; $('msg-desc').innerText=d; $('msg-modal').classList.add('active'); }
-    };
-
-    const Cards = {
-        suits: ['♠','♥','♦','♣'], cols: ['black','red','red','black'], vals: ['A','2','3','4','5','6','7','8','9','10','J','Q','K'],
-        deck: function(suitFilter=[0,1,2,3], num=1) {
-            let d = [];
-            for(let n=0; n<num; n++) for(let s of suitFilter) for(let v=1; v<=13; v++) 
-                d.push({ id: Math.random().toString(36).substring(2,9), s, v, color: this.cols[s], up: false });
-            for(let i=d.length-1; i>0; i--) { let j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
-            return d;
-        },
-        html: function(c, x, y, z, onclick, p, idx, selId) {
-            if(!c) return `<div class="slot" style="left:${x}px;top:${y}px" onclick="${onclick}('${p}',${idx})"></div>`;
-            const sel = selId === c.id ? 'selected' : '';
-            if(!c.up) return `<div class="card back ${sel}" style="left:${x}px;top:${y}px;z-index:${z}" onclick="${onclick}('${p}',${idx})"><div></div></div>`;
-            return `<div class="card ${c.color} ${sel}" style="left:${x}px;top:${y}px;z-index:${z}" onclick="${onclick}('${p}',${idx})">
-                <div class="c-top"><span class="c-val">${this.vals[c.v-1]}</span><span class="c-suit">${this.suits[c.s]}</span></div>
-                <div class="c-center">${this.suits[c.s]}</div>
-                <div class="c-bot"><span class="c-val">${this.vals[c.v-1]}</span><span class="c-suit">${this.suits[c.s]}</span></div></div>`;
-        }
-    };
-
-    const Klondike = {
-        st: {}, sel: null,
-        init: function() {
-            this.sel = null; let d = Cards.deck();
-            this.st = { s: d, w: [], f: [[],[],[],[]], t: [[],[],[],[],[],[],[]] };
-            for(let i=0; i<7; i++) for(let j=0; j<=i; j++) { let c = this.st.s.pop(); if(j===i) c.up=true; this.st.t[i].push(c); }
-            this.draw();
-        },
-        clk: function(p, i) {
-            let s = this.st, sel = this.sel, tPile = p==='w'?s.w : p.startsWith('f')?s.f[p[1]] : s.t[p[1]], tCard = tPile[i];
-            if(p === 's') {
-                if(s.s.length) { let c=s.s.pop(); c.up=true; s.w.push(c); } else { s.s=s.w.reverse(); s.s.forEach(c=>c.up=false); s.w=[]; }
-                this.sel = null; this.draw(); return;
-            }
-            if(!sel) {
-                if(!tPile.length || !tCard.up) return;
-                if((p==='w' && i!==s.w.length-1) || (p.startsWith('f') && i!==tPile.length-1)) return;
-                this.sel = { c: tCard, p, pIdx: p[1], i };
-            } else {
-                if(sel.p === p && sel.pIdx === p[1]) { this.sel = null; this.draw(); return; }
-                let top = tPile.length ? tPile[tPile.length-1] : null, v = false;
-                if(p.startsWith('f')) v = (sel.i === (sel.p==='w'?s.w.length-1:sel.p.startsWith('f')?s.f[sel.pIdx].length-1:s.t[sel.pIdx].length-1)) && (!top ? sel.c.v===1 : (sel.c.s===top.s && sel.c.v===top.v+1));
-                else if(p.startsWith('t')) v = !top ? sel.c.v===13 : (sel.c.color!==top.color && sel.c.v===top.v-1);
-                
-                if(v) {
-                    let sPile = sel.p==='w'?s.w : sel.p.startsWith('f')?s.f[sel.pIdx] : s.t[sel.pIdx];
-                    let m = sPile.splice(sel.i);
-                    if(sPile.length && !sPile[sPile.length-1].up) sPile[sPile.length-1].up = true;
-                    p.startsWith('f') ? s.f[p[1]].push(...m) : s.t[p[1]].push(...m);
-                    this.sel = null; if(s.f.reduce((a,f)=>a+f.length,0)===52) app.msg("Victory!","Klondike solved.");
-                } else this.sel = null;
-            }
-            this.draw();
-        },
-        draw: function() {
-            let b=$('b-klondike'), h='', g=10, cw=70, ch=100;
-            h += Cards.html(null, g, g, 0, 'Klondike.clk', 's', 0);
-            if(this.st.s.length) h += Cards.html(this.st.s[this.st.s.length-1], g, g, 1, 'Klondike.clk', 's', 0, this.sel?.c.id);
-            h += Cards.html(null, g+cw+g, g, 0, '', '', 0);
-            let wl=this.st.w.length; for(let i=Math.max(0,wl-3); i<wl; i++) h += Cards.html(this.st.w[i], g+cw+g+(i-Math.max(0,wl-3))*15, g, i+1, 'Klondike.clk', 'w', i, this.sel?.c.id);
-            for(let i=0; i<4; i++) { h+=Cards.html(null, g+(3+i)*(cw+g), g, 0, 'Klondike.clk', `f${i}`, 0); if(this.st.f[i].length) h+=Cards.html(this.st.f[i][this.st.f[i].length-1], g+(3+i)*(cw+g), g, 1, 'Klondike.clk', `f${i}`, this.st.f[i].length-1, this.sel?.c.id); }
-            for(let i=0; i<7; i++) { h+=Cards.html(null, g+i*(cw+g), g+ch+g, 0, 'Klondike.clk', `t${i}`, 0); let y=g+ch+g; for(let j=0; j<this.st.t[i].length; j++) { let c=this.st.t[i][j]; h+=Cards.html(c, g+i*(cw+g), y, j+1, 'Klondike.clk', `t${i}`, j, this.sel?.c.id); y+=c.up?24:10; } }
-            b.innerHTML = h;
-        }
-    };
-
-    const FreeCell = {
-        st: {}, sel: null,
-        init: function() {
-            this.sel = null; let d = Cards.deck(); d.forEach(c=>c.up=true);
-            this.st = { c: [null,null,null,null], f: [[],[],[],[]], t: [[],[],[],[],[],[],[],[]] };
-            let i=0; while(d.length) { this.st.t[i].push(d.pop()); i=(i+1)%8; }
-            this.draw();
-        },
-        clk: function(p, i) {
-            let s = this.st, sel = this.sel, pI = p[1], tP = p.startsWith('c')?[s.c[pI]]:p.startsWith('f')?s.f[pI]:s.t[pI];
-            if(!sel) {
-                if(p.startsWith('c') && !s.c[pI]) return;
-                if(p.startsWith('f') || (p.startsWith('t') && i!==s.t[pI].length-1 && s.t[pI].length>0)) { if(p.startsWith('t') && i===s.t[pI].length-1) {} else return; }
-                this.sel = { c: p.startsWith('c')?s.c[pI]:tP[tP.length-1], p, pI, i };
-            } else {
-                if(sel.p===p && sel.pI===pI) { this.sel=null; this.draw(); return; }
-                let top = p.startsWith('c')?s.c[pI] : tP.length?tP[tP.length-1]:null, v = false;
-                if(p.startsWith('c')) v = !top;
-                else if(p.startsWith('f')) v = !top ? sel.c.v===1 : (sel.c.s===top.s && sel.c.v===top.v+1);
-                else if(p.startsWith('t')) v = !top || (sel.c.color!==top.color && sel.c.v===top.v-1);
-                
-                if(v) {
-                    let m = sel.p.startsWith('c')?s.c[sel.pI] : s.t[sel.pI].pop();
-                    if(sel.p.startsWith('c')) s.c[sel.pI]=null;
-                    if(p.startsWith('c')) s.c[pI]=m; else if(p.startsWith('f')) s.f[pI].push(m); else s.t[pI].push(m);
-                    this.sel=null; if(s.f.reduce((a,f)=>a+f.length,0)===52) app.msg("Victory!","FreeCell solved.");
-                } else this.sel=null;
-            }
-            this.draw();
-        },
-        draw: function() {
-            let b=$('b-freecell'), h='', g=10, cw=70, ch=100;
-            for(let i=0; i<4; i++) { h+=Cards.html(this.st.c[i], g+i*(cw+g), g, 0, 'FreeCell.clk', `c${i}`, 0, this.sel?.c.id); h+=Cards.html(null, g+(4+i)*(cw+g), g, 0, 'FreeCell.clk', `f${i}`, 0); if(this.st.f[i].length) h+=Cards.html(this.st.f[i][this.st.f[i].length-1], g+(4+i)*(cw+g), g, 1, 'FreeCell.clk', `f${i}`, 0, this.sel?.c.id); }
-            for(let i=0; i<8; i++) { h+=Cards.html(null, g+i*(cw+g), g+ch+g, 0, 'FreeCell.clk', `t${i}`, 0); for(let j=0; j<this.st.t[i].length; j++) h+=Cards.html(this.st.t[i][j], g+i*(cw+g), g+ch+g+j*25, j+1, 'FreeCell.clk', `t${i}`, j, this.sel?.c.id); }
-            b.innerHTML = h;
-        }
-    };
-
-    const Spider = {
-        st: {}, sel: null,
-        init: function() {
-            this.sel = null; let d = Cards.deck([0], 8);
-            this.st = { s: d, t: Array.from({length:10},()=>[]), comp: 0 };
-            for(let i=0; i<10; i++) { let l = i<4?6:5; for(let j=0; j<l; j++) { let c=d.pop(); if(j===l-1) c.up=true; this.st.t[i].push(c); } }
-            this.draw();
-        },
-        clk: function(p, i) {
-            let s=this.st, sel=this.sel;
-            if(p==='s') { if(s.s.length>=10 && s.t.every(t=>t.length>0)) { for(let i=0; i<10; i++) { let c=s.s.pop(); c.up=true; s.t[i].push(c); } this.chk(); this.draw(); } return; }
-            let pI=p[1], tP = s.t[pI];
-            if(!sel) {
-                if(!tP.length || !tP[i].up) return;
-                for(let j=i; j<tP.length-1; j++) if(tP[j].v !== tP[j+1].v+1) return;
-                this.sel = { p, pI, i };
-            } else {
-                if(sel.pI===pI) { this.sel=null; this.draw(); return; }
-                if(!tP.length || s.t[sel.pI][sel.i].v === tP[tP.length-1].v-1) {
-                    let m = s.t[sel.pI].splice(sel.i);
-                    if(s.t[sel.pI].length) s.t[sel.pI][s.t[sel.pI].length-1].up = true;
-                    s.t[pI].push(...m); this.sel=null; this.chk(); if(s.comp===8) app.msg("Victory!","Spider solved.");
-                } else this.sel=null;
-            }
-            this.draw();
-        },
-        chk: function() {
-            this.st.t.forEach(t => {
-                if(t.length>=13) { let r=true; for(let i=0; i<13; i++) { let c=t[t.length-13+i]; if(!c.up || c.v!==13-i) {r=false; break;} }
-                if(r) { t.splice(t.length-13); this.st.comp++; if(t.length) t[t.length-1].up=true; } }
+            peer = new Peer(roomCode);
+            
+            peer.on('open', (id) => {
+                document.getElementById('host-status').innerHTML = `Room Created! Tell your friend to join: <strong style="color:white; font-size:20px;">${id}</strong>`;
+                isHost = true;
             });
-        },
-        draw: function() {
-            let b=$('b-spider'), h='', g=10, cw=Math.min(70, (b.clientWidth-20)/10-4), ch=100;
-            h+=`<div class="slot" style="left:${g}px;top:${g}px;width:${cw}px" onclick="Spider.clk('s',0)">↓</div>`;
-            if(this.st.s.length) h+=`<div class="card back" style="left:${g}px;top:${g}px;width:${cw}px" onclick="Spider.clk('s',0)"></div>`;
-            for(let i=0; i<this.st.comp; i++) h+=`<div class="card black" style="left:${g+(9*(cw+4))-(i*10)}px;top:${g}px;width:${cw}px"><div class="c-center">♠</div></div>`;
-            for(let i=0; i<10; i++) { let x=g+i*(cw+4), y=g+ch+g; h+=`<div class="slot" style="left:${x}px;top:${y}px;width:${cw}px" onclick="Spider.clk('t${i}',0)"></div>`; for(let j=0; j<this.st.t[i].length; j++) { let c=this.st.t[i][j]; h+=Cards.html(c, x, y, j, 'Spider.clk', `t${i}`, j, this.sel?.pI==i&&j>=this.sel.i ? c.id:null).replace('class="card', `style="width:${cw}px; left:${x}px; top:${y}px; z-index:${j}" class="card`); y+=c.up?20:8; } }
-            b.innerHTML = h;
-        }
-    };
 
-    const TriPeaks = {
-        st: {},
-        init: function() {
-            let d = Cards.deck(), b = [];
-            for(let i=0; i<28; i++) b.push({c: d.pop(), act:true, cov: [0:[3,4],1:[5,6],2:[7,8],3:[9,10],4:[10,11],5:[12,13],6:[13,14],7:[15,16],8:[16,17],9:[18,19],10:[19,20],11:[20,21],12:[21,22],13:[22,23],14:[23,24],15:[24,25],16:[25,26],17:[26,27]}[i]||[] });
-            this.st = { b, s: d, w: [d.pop()], sc: 0, str: 0 }; this.st.w[0].up = true; this.upd(); this.draw();
-        },
-        upd: function() { this.st.b.forEach(n => { if(n.act) n.c.up = !n.cov.some(i => this.st.b[i].act); }); },
-        clk: function(i) {
-            let s=this.st;
-            if(i==='s') { if(s.s.length) { let c=s.s.pop(); c.up=true; s.w.push(c); s.str=0; this.draw(); } return; }
-            let n=s.b[i]; if(!n.act || !n.c.up) return;
-            let tw=s.w[s.w.length-1], diff = Math.abs(n.c.v - tw.v);
-            if(diff===1 || diff===12) { n.act=false; s.w.push(n.c); s.str++; s.sc+=s.str*100; $('tp-score').innerText='Score: '+s.sc; this.upd(); this.draw(); if(s.b.every(n=>!n.act)) app.msg("Victory!",`Score: ${s.sc}`); }
-        },
-        draw: function() {
-            let b=$('b-tripeaks'), h='', w=b.clientWidth, cw=70, ch=100, ox=w/2, oy=20;
-            const xm=[-3,0,3, -3.5,-2.5,-0.5,0.5,2.5,3.5, -4,-3,-2,-1,0,1,2,3,4, -4.5,-3.5,-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5], yr=[0, 60, 120, 180];
-            this.st.b.forEach((n,i) => { if(n.act) h+=Cards.html(n.c, ox+xm[i]*40-cw/2, oy+yr[i<3?0:i<9?1:i<18?2:3], i, 'TriPeaks.clk', i); });
-            h+=Cards.html(null, ox-cw-10, oy+250, 0, 'TriPeaks.clk', 's'); if(this.st.s.length) h+=Cards.html(this.st.s[this.st.s.length-1], ox-cw-10, oy+250, 1, 'TriPeaks.clk', 's');
-            if(this.st.w.length) h+=Cards.html(this.st.w[this.st.w.length-1], ox+10, oy+250, 1, 'TriPeaks.clk', 'w');
-            b.innerHTML = h;
+            peer.on('connection', (conn) => {
+                connection = conn;
+                setupConnection();
+            });
         }
-    };
 
-    const Pyramid = {
-        st: {}, sel: null,
-        init: function() {
-            let d = Cards.deck(), b = [];
-            for(let i=0; i<28; i++) { let c=d.pop(); c.up=true; c.idx=i; c.act=true; b.push(c); }
-            this.st = { b, s: d, w: [d.pop()] }; this.st.w[0].up = true; this.sel=null; this.draw();
-        },
-        chk: function(i) { let r=Math.floor((-1+Math.sqrt(1+8*i))/2), l=i+r+1, rt=i+r+2; return (l<28&&this.st.b[l].act) || (rt<28&&this.st.b[rt].act); },
-        clk: function(l, i) {
-            let s=this.st, c;
-            if(l==='s') { if(s.s.length) { let p=s.s.pop(); p.up=true; s.w.push(p); } else { s.s=s.w.reverse(); s.s.forEach(x=>x.up=false); s.w=[]; } this.sel=null; this.draw(); return; }
-            if(l==='w') c=s.w[s.w.length-1]; if(l==='b') { c=s.b[i]; if(this.chk(i)) return; }
-            if(!c || !c.act) return;
-            if(c.v===13) { c.act=false; if(l==='w') s.w.pop(); this.sel=null; }
-            else if(!this.sel) this.sel={c,l,i};
-            else {
-                if(this.sel.c.id===c.id) this.sel=null;
-                else if(this.sel.c.v+c.v===13) { c.act=false; this.sel.c.act=false; if(l==='w') s.w.pop(); if(this.sel.l==='w') s.w.pop(); this.sel=null; if(s.b.every(x=>!x.act)) app.msg("Victory!","Pyramid solved."); }
-                else this.sel={c,l,i};
-            }
-            this.draw();
-        },
-        draw: function() {
-            let b=$('b-pyramid'), h='', w=b.clientWidth, cw=70, ch=100, ox=w/2, oy=20, i=0;
-            for(let r=0; r<7; r++) { let sx=ox-(r*75)/2; for(let c=0; c<=r; c++) { let cd=this.st.b[i]; if(cd.act) h+=Cards.html(cd, sx+c*75-cw/2, oy+r*45, i, 'Pyramid.clk', 'b', i, this.sel?.c.id); i++; } }
-            h+=Cards.html(null, ox-cw-10, oy+350, 0, 'Pyramid.clk', 's', 0); if(this.st.s.length) h+=Cards.html(this.st.s[this.st.s.length-1], ox-cw-10, oy+350, 1, 'Pyramid.clk', 's', 0);
-            if(this.st.w.length) h+=Cards.html(this.st.w[this.st.w.length-1], ox+10, oy+350, 1, 'Pyramid.clk', 'w', 0, this.sel?.c.id);
-            b.innerHTML = h;
+        // Initialize PeerJS for the Joiner
+        function joinRoom() {
+            const roomCode = document.getElementById('join-id').value.trim();
+            if (!roomCode) return alert("Please enter a Room ID");
+            
+            document.getElementById('join-status').innerText = "Connecting...";
+            peer = new Peer();
+            
+            peer.on('open', () => {
+                connection = peer.connect(roomCode);
+                connection.on('open', () => {
+                    isHost = false;
+                    setupConnection();
+                });
+            });
         }
-    };
 
-    const Bubble = {
-        r: false, b: [], c: null, w: 600, h: 800, cols: ['#ef4444','#3b82f6','#10b981','#eab308','#a855f7'], rad: 20, a: Math.PI/2, sc: 0,
-        init: function() {
-            this.b=[]; this.sc=0; $('bub-score').innerText='Score: 0';
-            for(let r=0; r<6; r++) { let cls=r%2?13:14; for(let c=0; c<cls; c++) this.b.push({x: 30+c*40+(r%2?20:0), y: 30+r*35, c: this.cols[Math.floor(Math.random()*this.cols.length)]}); }
-            this.sp(); this.r=true;
-            $('c-bubble').onmousemove=e=>{ const rt=e.target.getBoundingClientRect(); this.a=Math.atan2(e.clientY-rt.top-750, e.clientX-rt.left-300); };
-            $('c-bubble').onclick=()=>{ if(this.c && !this.c.dx) { this.c.dx=Math.cos(this.a)*20; this.c.dy=Math.sin(this.a)*20; } };
-            requestAnimationFrame(()=>this.loop());
-        },
-        sp: function() { this.c = { x:300, y:750, dx:0, dy:0, c: this.cols[Math.floor(Math.random()*this.cols.length)] }; },
-        loop: function() {
-            if(!this.r) return; const ct=ctx('c-bubble'); ct.clearRect(0,0,this.w,this.h);
-            this.b.forEach(b=>{ ct.beginPath(); ct.arc(b.x,b.y,this.rad,0,Math.PI*2); ct.fillStyle=b.c; ct.fill(); ct.stroke(); });
-            ct.beginPath(); ct.moveTo(300,750); ct.lineTo(300+Math.cos(this.a)*60, 750+Math.sin(this.a)*60); ct.strokeStyle='#fff'; ct.lineWidth=3; ct.stroke();
-            if(this.c) {
-                this.c.x+=this.c.dx; this.c.y+=this.c.dy;
-                if(this.c.x<this.rad || this.c.x>this.w-this.rad) this.c.dx*=-1;
-                let hit = this.c.y<this.rad;
-                if(!hit) this.b.forEach(b=>{ if(Math.hypot(b.x-this.c.x, b.y-this.c.y)<this.rad*2) hit=true; });
-                if(hit) {
-                    this.c.dx=0; this.c.dy=0;
-                    this.c.y = Math.floor(this.c.y/35)*35+30; let ro=Math.floor((this.c.y-30)/35);
-                    this.c.x = Math.floor((this.c.x-(ro%2?20:0))/40)*40+30+(ro%2?20:0);
-                    this.b.push(this.c); this.sc+=10; $('bub-score').innerText='Score: '+this.sc;
-                    if(this.c.y>700) { this.r=false; app.msg("Game Over", `Score: ${this.sc}`, "text-red-500"); } else this.sp();
+        // Handle the live data stream between computers
+        function setupConnection() {
+            document.getElementById('lobby').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            document.getElementById('game-title').innerText = "Networked Pong - Connected!";
+
+            connection.on('data', (data) => {
+                if (isHost) {
+                    // Host receives Player 2's paddle position
+                    gameState.p2y = data.y;
+                } else {
+                    // Player 2 receives the entire game state from the Host
+                    gameState = data;
                 }
-                ct.beginPath(); ct.arc(this.c.x,this.c.y,this.rad,0,Math.PI*2); ct.fillStyle=this.c.c; ct.fill();
+            });
+
+            // Start the game loops
+            setInterval(sendData, 1000 / 60); // Send updates 60 times a second
+            if (isHost) {
+                gameLoopInt = setInterval(updatePhysics, 1000 / 60);
             }
-            requestAnimationFrame(()=>this.loop());
+            setInterval(drawGame, 1000 / 60);
         }
-    };
 
-    const Gravity = {
-        r: false, g: [], p: null, sc: 0, lst: 0,
-        s: [[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]],[[1,1,0],[0,1,1]],[[0,1,1],[1,1,0]]],
-        c: ['cyan','yellow','purple','blue','orange','green','red'],
-        init: function() {
-            this.g=Array.from({length:20},()=>Array(10).fill(0)); this.sc=0; $('grav-score').innerText='Score: 0';
-            this.sp(); this.r=true; this.lst=Date.now();
-            requestAnimationFrame(()=>this.loop());
-        },
-        sp: function() { let r=Math.floor(Math.random()*this.s.length); this.p={s:this.s[r], c:r+1, x:3, y:0}; if(this.col(0,0)) { this.r=false; app.msg("Game Over",`Score: ${this.sc}`,"text-red-500"); } },
-        col: function(dx,dy,s=this.p.s) { for(let r=0;r<s.length;r++) for(let c=0;c<s[r].length;c++) if(s[r][c] && (this.p.x+c+dx<0 || this.p.x+c+dx>=10 || this.p.y+r+dy>=20 || (this.p.y+r+dy>=0 && this.g[this.p.y+r+dy][this.p.x+c+dx]))) return true; return false; },
-        mrg: function() {
-            this.p.s.forEach((r,ri)=>r.forEach((v,ci)=>{ if(v) this.g[this.p.y+ri][this.p.x+ci]=this.p.c; }));
-            let cl=0; for(let r=19;r>=0;r--) if(this.g[r].every(v=>v!==0)) { this.g.splice(r,1); this.g.unshift(Array(10).fill(0)); cl++; r++; }
-            if(cl) { this.sc+=[0,100,300,500,800][cl]; $('grav-score').innerText='Score: '+this.sc; }
-            this.sp();
-        },
-        inp: function() {
-            if(!this.r) return;
-            if(keys['ArrowLeft']) { if(!this.col(-1,0)) this.p.x--; keys['ArrowLeft']=false; }
-            if(keys['ArrowRight']) { if(!this.col(1,0)) this.p.x++; keys['ArrowRight']=false; }
-            if(keys['ArrowDown']) { if(!this.col(0,1)) this.p.y++; else this.mrg(); }
-            if(keys['ArrowUp']) { let ns=this.p.s[0].map((_,i)=>this.p.s.map(r=>r[i]).reverse()); if(!this.col(0,0,ns)) this.p.s=ns; keys['ArrowUp']=false; }
-        },
-        loop: function() {
-            if(!this.r) return; let now=Date.now();
-            this.inp(); if(now-this.lst>500) { if(!this.col(0,1)) this.p.y++; else this.mrg(); this.lst=now; }
-            const ct=ctx('c-gravity'); ct.clearRect(0,0,300,600);
-            const dr=(x,y,c)=>{ ct.fillStyle=this.c[c-1]; ct.fillRect(x*30,y*30,29,29); };
-            this.g.forEach((r,ri)=>r.forEach((v,ci)=>{ if(v) dr(ci,ri,v); }));
-            this.p.s.forEach((r,ri)=>r.forEach((v,ci)=>{ if(v) dr(this.p.x+ci,this.p.y+ri,this.p.c); }));
-            requestAnimationFrame(()=>this.loop());
-        }
-    };
+        // Keyboard Controls
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'w' || e.key === 'W') myY = Math.max(0, myY - 20);
+            if (e.key === 's' || e.key === 'S') myY = Math.min(canvas.height - 100, myY + 20);
+        });
 
-    const Jewel = {
-        g: [], em: ['💎','🟩','🔶','💜','🔴','🌟'], sel: null, sc: 0,
-        init: function() {
-            this.g=Array.from({length:8},()=>Array.from({length:8},()=>Math.floor(Math.random()*this.em.length)));
-            this.sc=0; $('jw-score').innerText='Score: 0'; this.sel=null; this.draw();
-        },
-        clk: function(r,c) {
-            if(!this.sel) { this.sel={r,c}; this.draw(); return; }
-            let dr=Math.abs(this.sel.r-r), dc=Math.abs(this.sel.c-c);
-            if((dr===1&&dc===0) || (dr===0&&dc===1)) {
-                let t=this.g[r][c]; this.g[r][c]=this.g[this.sel.r][this.sel.c]; this.g[this.sel.r][this.sel.c]=t;
-                this.sc+=50; $('jw-score').innerText='Score: '+this.sc;
-                this.g[r][c]=Math.floor(Math.random()*this.em.length); // Instant replacement for demo
+        // Send data over the internet
+        function sendData() {
+            if (!connection) return;
+            if (isHost) {
+                gameState.p1y = myY;
+                connection.send(gameState);
+            } else {
+                connection.send({ y: myY });
             }
-            this.sel=null; this.draw();
-        },
-        draw: function() {
-            let b=$('b-jewel'), h='';
-            for(let r=0; r<8; r++) for(let c=0; c<8; c++) h+=`<div class="grid-cell ${this.sel&&this.sel.r===r&&this.sel.c===c?'sel':''}" style="width:50px;height:50px" onclick="Jewel.clk(${r},${c})">${this.em[this.g[r][c]]}</div>`;
-            b.innerHTML=h;
         }
-    };
 
-    const GemDrop = {
-        g: [], em: ['#ef4444','#3b82f6','#10b981','#eab308'], sc: 0,
-        init: function() {
-            this.g=Array.from({length:10},()=>Array.from({length:12},()=>Math.floor(Math.random()*this.em.length)));
-            this.sc=0; $('gd-score').innerText='Score: 0'; this.draw();
-        },
-        clk: function(r,c) {
-            let col=this.g[r][c]; if(col===-1) return;
-            let q=[[r,c]], f=[], v=Array.from({length:10},()=>Array(12).fill(false)); v[r][c]=true;
-            while(q.length>0) {
-                let [cr,cc]=q.shift(); f.push([cr,cc]);
-                [[0,1],[1,0],[0,-1],[-1,0]].forEach(([dr,dc])=>{ let nr=cr+dr,nc=cc+dc; if(nr>=0&&nr<10&&nc>=0&&nc<12&&!v[nr][nc]&&this.g[nr][nc]===col){v[nr][nc]=true;q.push([nr,nc]);} });
+        // Host handles all the bounce math
+        function updatePhysics() {
+            gameState.ballX += gameState.ballVX;
+            gameState.ballY += gameState.ballVY;
+
+            // Wall bounces
+            if (gameState.ballY <= 0 || gameState.ballY >= canvas.height) gameState.ballVY *= -1;
+
+            // Paddle bounces
+            if (gameState.ballX <= 30 && gameState.ballY > gameState.p1y && gameState.ballY < gameState.p1y + 100) {
+                gameState.ballVX *= -1.05; // Speed up slightly
             }
-            if(f.length>1) { f.forEach(([fr,fc])=>this.g[fr][fc]=-1); this.sc+=f.length*10; $('gd-score').innerText='Score: '+this.sc; this.grav(); this.draw(); }
-        },
-        grav: function() {
-            for(let c=0; c<12; c++) { let d=[]; for(let r=0; r<10; r++) if(this.g[r][c]!==-1) d.push(this.g[r][c]); while(d.length<10) d.unshift(-1); for(let r=0; r<10; r++) this.g[r][c]=d[r]; }
-        },
-        draw: function() {
-            let b=$('b-gemdrop'), h='';
-            for(let r=0; r<10; r++) for(let c=0; c<12; c++) h+=`<div class="grid-cell" style="width:40px;height:40px;background:${this.g[r][c]===-1?'transparent':this.em[this.g[r][c]]}" onclick="GemDrop.clk(${r},${c})"></div>`;
-            b.innerHTML=h;
-        }
-    };
-
-    const Mahjong = {
-        t: [], sel: null,
-        init: function() {
-            let ty = ['🔴1','🔴2','🔴3','🔴4','🔴5','🔴6','🔴7','🔴8','🔴9','🟢1','🟢2','🟢3','🟢4','🟢5','🟢6','🟢7','🟢8','🟢9','🔵1','🔵2','🔵3','🔵4','🔵5','🔵6','🔵7','🔵8','🔵9','🀄','⬛','⬜','🌸','🍁','❄️','☀️','🐉','🐅'];
-            let p = []; ty.forEach(t=>{p.push(t,t,t,t);}); for(let i=p.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[p[i],p[j]]=[p[j],p[i]];}
-            this.t = [];
-            for(let x=1; x<13; x++) for(let y=1; y<9; y++) this.t.push({x:x*50, y:y*65, z:0, v:p.pop(), id:Math.random(), act:true});
-            for(let x=3; x<11; x++) for(let y=2; y<8; y++) this.t.push({x:x*50+25, y:y*65+32, z:1, v:p.pop(), id:Math.random(), act:true});
-            this.sel=null; this.draw();
-        },
-        free: function(t) {
-            if(this.t.some(o=>o.act && o.z>t.z && Math.abs(o.x-t.x)<48 && Math.abs(o.y-t.y)<60)) return false;
-            let l=this.t.some(o=>o.act && o.z===t.z && o.x<t.x && Math.abs(o.x+50-t.x)<5 && Math.abs(o.y-t.y)<60);
-            let r=this.t.some(o=>o.act && o.z===t.z && o.x>t.x && Math.abs(t.x+50-o.x)<5 && Math.abs(o.y-t.y)<60);
-            return !(l&&r);
-        },
-        clk: function(id) {
-            let t=this.t.find(o=>o.id===id); if(!t || !t.act || !this.free(t)) return;
-            if(!this.sel) { this.sel=t; this.draw(); }
-            else {
-                if(this.sel.id===t.id) this.sel=null;
-                else if(this.sel.v===t.v) { t.act=false; this.sel.act=false; this.sel=null; let rem=this.t.filter(o=>o.act).length; $('mj-rem').innerText='Tiles: '+rem; if(rem===0) app.msg("Victory!","Mahjong cleared."); }
-                else this.sel=t;
-                this.draw();
-            }
-        },
-        draw: function() {
-            let b=$('b-mahjong'), h='', ox=(b.clientWidth-(14*50))/2;
-            [...this.t].sort((a,b)=>a.z!==b.z?a.z-b.z:(a.y!==b.y?a.y-b.y:a.x-b.x)).forEach(t=>{
-                if(t.act) h+=`<div class="mj-tile ${!this.free(t)?'blocked':''} ${this.sel&&this.sel.id===t.id?'sel':''}" style="left:${ox+t.x}px;top:${t.y}px;z-index:${t.z}" onclick="Mahjong.clk(${t.id})"><span style="font-size:24px">${t.v.slice(0,-1)}</span><span>${t.v.slice(-1)}</span></div>`;
-            }); b.innerHTML=h;
-        }
-    };
-
-    const Pong = {
-        r: false, p1: 0, p2: 0, s1: 0, s2: 0, bx: 500, by: 300, bdx: 5, bdy: 5,
-        init: function() { this.p1=250; this.p2=250; this.s1=0; this.s2=0; this.bx=500; this.by=300; this.bdx=6; this.bdy=6; this.r=true; $('pong-score').innerText='0 - 0'; requestAnimationFrame(()=>this.loop()); },
-        loop: function() {
-            if(!this.r) return; const ct=ctx('c-pong'); ct.clearRect(0,0,1000,600);
-            if(keys['KeyW'] && this.p1>0) this.p1-=8; if(keys['KeyS'] && this.p1<500) this.p1+=8;
-            if(keys['ArrowUp'] && this.p2>0) this.p2-=8; if(keys['ArrowDown'] && this.p2<500) this.p2+=8;
-            
-            this.bx+=this.bdx; this.by+=this.bdy;
-            if(this.by<=0 || this.by>=590) this.bdy*=-1;
-            
-            if(this.bx<=40 && this.by>=this.p1 && this.by<=this.p1+100) { this.bdx*=-1.1; this.bx=40; }
-            if(this.bx>=950 && this.by>=this.p2 && this.by<=this.p2+100) { this.bdx*=-1.1; this.bx=950; }
-            
-            if(this.bx<0) { this.s2++; this.rst(); } if(this.bx>1000) { this.s1++; this.rst(); }
-            $('pong-score').innerText = `${this.s1} - ${this.s2}`;
-            
-            ct.fillStyle='#fff'; ct.fillRect(20, this.p1, 20, 100); ct.fillRect(960, this.p2, 20, 100);
-            ct.beginPath(); ct.arc(this.bx, this.by, 10, 0, Math.PI*2); ct.fill();
-            ct.setLineDash([10, 15]); ct.beginPath(); ct.moveTo(500,0); ct.lineTo(500,600); ct.strokeStyle='#555'; ct.lineWidth=5; ct.stroke();
-            
-            if(this.s1>=5 || this.s2>=5) { this.r=false; app.msg("Game Over", `Player ${this.s1>=5?1:2} Wins!`); }
-            else requestAnimationFrame(()=>this.loop());
-        },
-        rst: function() { this.bx=500; this.by=300; this.bdx=(this.bdx>0?-6:6); this.bdy=(Math.random()>0.5?6:-6); }
-    };
-
-    const Dogfight = {
-        r: false, p1: null, p2: null, b: [],
-        init: function() {
-            this.p1={x:100, y:350, a:0, hp:10, c:'#3b82f6', cd:0}; this.p2={x:900, y:350, a:Math.PI, hp:10, c:'#ef4444', cd:0};
-            this.b=[]; this.r=true; requestAnimationFrame(()=>this.loop());
-        },
-        loop: function() {
-            if(!this.r) return; const ct=ctx('c-dogfight'); ct.clearRect(0,0,1000,700);
-            
-            const up=(p, lf, rt, fw, sh)=>{
-                if(keys[lf]) p.a-=0.08; if(keys[rt]) p.a+=0.08;
-                if(keys[fw]) { p.x+=Math.cos(p.a)*6; p.y+=Math.sin(p.a)*6; }
-                if(keys[sh] && p.cd<=0) { this.b.push({x:p.x, y:p.y, a:p.a, o:p}); p.cd=15; }
-                if(p.cd>0) p.cd--;
-                if(p.x<0) p.x=1000; if(p.x>1000) p.x=0; if(p.y<0) p.y=700; if(p.y>700) p.y=0;
-            };
-            up(this.p1, 'KeyA', 'KeyD', 'KeyW', 'Space'); up(this.p2, 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'Enter');
-            
-            for(let i=this.b.length-1; i>=0; i--) {
-                let bl=this.b[i]; bl.x+=Math.cos(bl.a)*15; bl.y+=Math.sin(bl.a)*15;
-                ct.fillStyle='#fff'; ct.fillRect(bl.x, bl.y, 4, 4);
-                let tgt = bl.o===this.p1 ? this.p2 : this.p1;
-                if(Math.hypot(bl.x-tgt.x, bl.y-tgt.y)<20) { tgt.hp--; this.b.splice(i,1); }
-                else if(bl.x<0||bl.x>1000||bl.y<0||bl.y>700) this.b.splice(i,1);
+            if (gameState.ballX >= canvas.width - 30 && gameState.ballY > gameState.p2y && gameState.ballY < gameState.p2y + 100) {
+                gameState.ballVX *= -1.05;
             }
 
-            const dr=(p)=>{
-                ct.save(); ct.translate(p.x, p.y); ct.rotate(p.a);
-                ct.fillStyle=p.c; ct.beginPath(); ct.moveTo(20,0); ct.lineTo(-15,15); ct.lineTo(-10,0); ct.lineTo(-15,-15); ct.fill();
-                ct.restore();
-                ct.fillStyle='#555'; ct.fillRect(p.x-25, p.y-30, 50, 5); ct.fillStyle='#10b981'; ct.fillRect(p.x-25, p.y-30, p.hp*5, 5);
-            };
-            dr(this.p1); dr(this.p2);
-
-            if(this.p1.hp<=0 || this.p2.hp<=0) { this.r=false; app.msg("Dogfight Over", `Player ${this.p1.hp>0?1:2} Wins!`); }
-            else requestAnimationFrame(()=>this.loop());
+            // Scoring
+            if (gameState.ballX < 0) { gameState.score2++; resetBall(); }
+            if (gameState.ballX > canvas.width) { gameState.score1++; resetBall(); }
         }
-    };
 
-    window.onload = () => app.show('klondike');
-</script>
+        function resetBall() {
+            gameState.ballX = canvas.width / 2;
+            gameState.ballY = canvas.height / 2;
+            gameState.ballVX = 5 * (Math.random() > 0.5 ? 1 : -1);
+            gameState.ballVY = 5 * (Math.random() > 0.5 ? 1 : -1);
+        }
+
+        // Draw the graphics
+        function drawGame() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'white';
+            // Draw Paddles
+            ctx.fillRect(10, isHost ? myY : gameState.p1y, 20, 100); // Player 1 (Left)
+            ctx.fillRect(canvas.width - 30, !isHost ? myY : gameState.p2y, 20, 100); // Player 2 (Right)
+
+            // Draw Ball
+            ctx.beginPath();
+            ctx.arc(gameState.ballX, gameState.ballY, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw Score
+            ctx.font = '40px Arial';
+            ctx.fillText(gameState.score1, 200, 50);
+            ctx.fillText(gameState.score2, canvas.width - 200, 50);
+            
+            // Center Line
+            ctx.setLineDash([10, 10]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width/2, 0);
+            ctx.lineTo(canvas.width/2, canvas.height);
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.stroke();
+        }
+    </script>
 </body>
 </html>
