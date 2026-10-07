@@ -2,39 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultimate 10-in-1 Game Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Ultimate Game Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
             --bg: #0f172a; --nav: #1e293b; --accent: #3b82f6; --board: #020617;
-            --cw: 60px; --ch: 85px; --c-gap: 8px;
+            --cw: 70px; --ch: 100px; --c-gap: 10px;
         }
-        @media(min-width: 768px) { :root { --cw: 76px; --ch: 108px; --c-gap: 12px; } }
-        
-        body { margin: 0; background: var(--bg); color: #f8fafc; font-family: system-ui, sans-serif; overflow: hidden; user-select: none; -webkit-user-select: none; }
+        body { margin: 0; background: var(--bg); color: #f8fafc; font-family: system-ui, sans-serif; overflow: hidden; user-select: none; }
         .flex-center { display: flex; align-items: center; justify-content: center; }
-        .hidden { display: none !important; }
         
         /* Layout */
-        #app { display: flex; height: 100vh; width: 100vw; flex-direction: column; }
-        @media(min-width: 768px) { #app { flex-direction: row; } }
-        
-        /* Sidebar */
-        #sidebar { background: var(--nav); border-right: 1px solid #334155; display: flex; overflow-x: auto; flex-shrink: 0; z-index: 50; }
-        @media(min-width: 768px) { #sidebar { flex-direction: column; width: 220px; overflow-y: auto; overflow-x: hidden; } }
-        .nav-btn { padding: 12px 16px; cursor: pointer; white-space: nowrap; border-left: 3px solid transparent; opacity: 0.7; transition: all 0.2s; }
+        #app { display: flex; height: 100vh; width: 100vw; flex-direction: row; }
+        #sidebar { background: var(--nav); border-right: 1px solid #334155; display: flex; flex-direction: column; width: 250px; overflow-y: auto; z-index: 50; }
+        .nav-btn { padding: 12px 20px; cursor: pointer; border-left: 3px solid transparent; opacity: 0.7; transition: all 0.2s; font-weight: 500; }
         .nav-btn:hover { opacity: 1; background: rgba(255,255,255,0.05); }
         .nav-btn.active { opacity: 1; border-color: var(--accent); background: rgba(59,130,246,0.1); color: var(--accent); }
         
-        /* Main View Area */
+        /* Main View */
         #main { flex-grow: 1; position: relative; background: var(--board); }
         .view { position: absolute; inset: 0; display: none; flex-direction: column; overflow: hidden; }
         .view.active { display: flex; }
-        .header { padding: 12px; background: rgba(0,0,0,0.5); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
-        .play-area { flex-grow: 1; position: relative; overflow-y: auto; overflow-x: hidden; padding: 16px; }
-        .canvas-container { flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        canvas { max-width: 100%; max-height: 100%; object-fit: contain; background: #000; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .header { padding: 16px; background: rgba(0,0,0,0.6); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+        .play-area { flex-grow: 1; position: relative; overflow: auto; padding: 20px; }
+        .canvas-container { flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; }
+        canvas { box-shadow: 0 4px 20px rgba(0,0,0,0.5); background: #111; }
 
         /* Cards */
         .card { 
@@ -47,38 +40,25 @@
         .card.back { background: repeating-linear-gradient(45deg, #1e3a8a, #1e3a8a 5px, #172554 5px, #172554 10px); border: 2px solid white; }
         .card.back > div { display: none; }
         .card.selected { box-shadow: 0 0 0 3px var(--accent), 0 4px 10px rgba(59,130,246,0.5); transform: translateY(-4px); z-index: 100 !important; }
-        
-        .c-val { font-weight: bold; font-size: 1rem; line-height: 1; }
-        .c-suit { font-size: 1.1rem; line-height: 1; }
-        .c-center { font-size: 2rem; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); opacity: 0.8; }
+        .c-val { font-weight: bold; font-size: 1.1rem; line-height: 1; }
+        .c-suit { font-size: 1.2rem; line-height: 1; }
+        .c-center { font-size: 2.2rem; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); opacity: 0.8; }
         .c-bot { transform: rotate(180deg); display: flex; flex-direction: column; align-items: center; position: absolute; bottom: 4px; right: 4px; }
         .c-top { display: flex; flex-direction: column; align-items: center; position: absolute; top: 4px; left: 4px; }
-        
-        .slot {
-            width: var(--cw); height: var(--ch); border: 2px dashed #334155; border-radius: 6px; 
-            position: absolute; display: flex; align-items: center; justify-content: center;
-            font-size: 2rem; color: #334155; cursor: pointer;
-        }
-        .slot.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+        .slot { width: var(--cw); height: var(--ch); border: 2px dashed #334155; border-radius: 6px; position: absolute; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #334155; cursor: pointer; }
 
-        /* DOM Grids (Jewel, Gem Drop) */
+        /* Grids & Tiles */
         .grid-board { display: grid; gap: 2px; margin: 0 auto; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 8px; }
-        .grid-cell { display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; transition: transform 0.1s; }
+        .grid-cell { display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; transition: transform 0.1s; border-radius: 4px;}
         .grid-cell:active { transform: scale(0.8); }
-        .grid-cell.sel { box-shadow: inset 0 0 0 2px #fff; border-radius: 4px; }
-
-        /* Mahjong Tiles */
-        .mj-tile {
-            position: absolute; width: 44px; height: 56px; background: #fef08a; border-radius: 4px;
-            box-shadow: 2px 2px 0 #a16207, 4px 4px 0 #713f12; cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-weight: bold; color: #000; transition: transform 0.1s;
-        }
+        .grid-cell.sel { box-shadow: inset 0 0 0 3px #fff; }
+        .mj-tile { position: absolute; width: 50px; height: 65px; background: #fef08a; border-radius: 4px; box-shadow: 2px 2px 0 #a16207, 4px 4px 0 #713f12; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; color: #000; transition: transform 0.1s; }
         .mj-tile.sel { transform: translateY(-4px); box-shadow: 0 0 0 3px var(--accent), 4px 8px 10px rgba(0,0,0,0.5); }
         .mj-tile.blocked { filter: brightness(0.7); cursor: not-allowed; }
 
-        /* General Modal */
-        .modal { position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; flex-direction: column; }
+        /* Shared Modal */
+        .modal { position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
         .modal-box { background: var(--nav); padding: 2rem; border-radius: 12px; text-align: center; border: 1px solid var(--accent); box-shadow: 0 0 30px rgba(59,130,246,0.3); }
     </style>
 </head>
@@ -86,84 +66,50 @@
 
 <div id="app">
     <nav id="sidebar">
-        <div class="hidden md:flex items-center p-4 text-xl font-bold border-b border-slate-700 tracking-wide text-blue-400">ARCADE<span class="text-white">SUITE</span></div>
-        <div class="px-4 py-2 mt-2 text-xs font-bold text-slate-500 uppercase hidden md:block">Solitaire</div>
-        <div class="nav-btn active" onclick="app.show('klondike')">♠ Klondike</div>
-        <div class="nav-btn" onclick="app.show('tripeaks')">⛰️ TriPeaks</div>
-        <div class="nav-btn" onclick="app.show('spider')">🕷️ Spider</div>
-        <div class="nav-btn" onclick="app.show('freecell')">🆓 FreeCell</div>
-        <div class="nav-btn" onclick="app.show('pyramid')">🔺 Pyramid</div>
-        <div class="px-4 py-2 mt-2 text-xs font-bold text-slate-500 uppercase hidden md:block">Arcade & Puzzle</div>
-        <div class="nav-btn" onclick="app.show('bubble')">🫧 Bubble Shooter</div>
-        <div class="nav-btn" onclick="app.show('jewel')">💎 Jewel Match</div>
-        <div class="nav-btn" onclick="app.show('tetris')">🧱 Gravity Blocks</div>
-        <div class="nav-btn" onclick="app.show('gemdrop')">✨ Gem Drop</div>
-        <div class="nav-btn" onclick="app.show('mahjong')">🀄 Mahjong 3D</div>
+        <div class="p-5 text-2xl font-black border-b border-slate-700 text-blue-400 tracking-wider">NEXUS<span class="text-white">PC</span></div>
+        
+        <div class="px-5 py-3 mt-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Card Games</div>
+        <div class="nav-btn active" onclick="app.show('klondike')">Klondike Solitaire</div>
+        <div class="nav-btn" onclick="app.show('freecell')">FreeCell</div>
+        <div class="nav-btn" onclick="app.show('spider')">Spider (1-Suit)</div>
+        <div class="nav-btn" onclick="app.show('tripeaks')">TriPeaks</div>
+        <div class="nav-btn" onclick="app.show('pyramid')">Pyramid</div>
+        
+        <div class="px-5 py-3 mt-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Arcade & Puzzle</div>
+        <div class="nav-btn" onclick="app.show('bubble')">Bubble Shooter</div>
+        <div class="nav-btn" onclick="app.show('jewel')">Jewel Match</div>
+        <div class="nav-btn" onclick="app.show('gravity')">Gravity Blocks</div>
+        <div class="nav-btn" onclick="app.show('gemdrop')">Gem Drop</div>
+        <div class="nav-btn" onclick="app.show('mahjong')">Mahjong</div>
+
+        <div class="px-5 py-3 mt-2 text-xs font-bold text-slate-500 uppercase tracking-widest">2-Player Local</div>
+        <div class="nav-btn" onclick="app.show('dogfight')">Aerial Dogfight</div>
+        <div class="nav-btn" onclick="app.show('pong')">Retro Pong</div>
     </nav>
 
     <main id="main">
-        <!-- Views -->
-        <div id="v-klondike" class="view active">
-            <div class="header"><h2>Klondike</h2><button class="bg-blue-600 px-4 py-1 rounded" onclick="Klondike.init()">Restart</button></div>
-            <div class="play-area" id="board-klondike"></div>
-        </div>
-        <div id="v-tripeaks" class="view">
-            <div class="header"><h2>TriPeaks</h2><div id="tp-score" class="font-bold text-emerald-400">Score: 0</div><button class="bg-blue-600 px-4 py-1 rounded" onclick="TriPeaks.init()">Restart</button></div>
-            <div class="play-area" id="board-tripeaks"></div>
-        </div>
-        <div id="v-spider" class="view">
-            <div class="header"><h2>Spider (1-Suit)</h2><button class="bg-blue-600 px-4 py-1 rounded" onclick="Spider.init()">Restart</button></div>
-            <div class="play-area" id="board-spider"></div>
-        </div>
-        <div id="v-freecell" class="view">
-            <div class="header"><h2>FreeCell</h2><button class="bg-blue-600 px-4 py-1 rounded" onclick="FreeCell.init()">Restart</button></div>
-            <div class="play-area" id="board-freecell"></div>
-        </div>
-        <div id="v-pyramid" class="view">
-            <div class="header"><h2>Pyramid</h2><button class="bg-blue-600 px-4 py-1 rounded" onclick="Pyramid.init()">Restart</button></div>
-            <div class="play-area" id="board-pyramid"></div>
-        </div>
+        <!-- DOM Views -->
+        <div id="v-klondike" class="view active"><div class="header"><h2>Klondike</h2><button class="bg-blue-600 px-4 py-2 rounded" onclick="Klondike.init()">Restart</button></div><div class="play-area" id="b-klondike"></div></div>
+        <div id="v-freecell" class="view"><div class="header"><h2>FreeCell</h2><button class="bg-blue-600 px-4 py-2 rounded" onclick="FreeCell.init()">Restart</button></div><div class="play-area" id="b-freecell"></div></div>
+        <div id="v-spider" class="view"><div class="header"><h2>Spider</h2><button class="bg-blue-600 px-4 py-2 rounded" onclick="Spider.init()">Restart</button></div><div class="play-area" id="b-spider"></div></div>
+        <div id="v-tripeaks" class="view"><div class="header"><h2>TriPeaks</h2><div id="tp-score" class="text-emerald-400 font-bold">Score: 0</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="TriPeaks.init()">Restart</button></div><div class="play-area" id="b-tripeaks"></div></div>
+        <div id="v-pyramid" class="view"><div class="header"><h2>Pyramid</h2><button class="bg-blue-600 px-4 py-2 rounded" onclick="Pyramid.init()">Restart</button></div><div class="play-area" id="b-pyramid"></div></div>
+        <div id="v-jewel" class="view"><div class="header"><h2>Jewel Match</h2><div id="jw-score" class="text-emerald-400 font-bold">Score: 0</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="Jewel.init()">Restart</button></div><div class="play-area flex-center"><div id="b-jewel" class="grid-board" style="grid-template-columns: repeat(8, 1fr);"></div></div></div>
+        <div id="v-gemdrop" class="view"><div class="header"><h2>Gem Drop</h2><div id="gd-score" class="text-emerald-400 font-bold">Score: 0</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="GemDrop.init()">Restart</button></div><div class="play-area flex-center"><div id="b-gemdrop" class="grid-board" style="grid-template-columns: repeat(12, 1fr);"></div></div></div>
+        <div id="v-mahjong" class="view"><div class="header"><h2>Mahjong</h2><div id="mj-rem" class="text-emerald-400 font-bold">Tiles: 144</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="Mahjong.init()">Restart</button></div><div class="play-area" id="b-mahjong"></div></div>
         
-        <!-- Canvas Games -->
-        <div id="v-bubble" class="view">
-            <div class="header"><h2>Bubble Shooter</h2><button class="bg-blue-600 px-4 py-1 rounded" onclick="Bubble.init()">Restart</button></div>
-            <div class="canvas-container"><canvas id="c-bubble" width="400" height="600"></canvas></div>
-        </div>
-        <div id="v-tetris" class="view">
-            <div class="header"><h2>Gravity Blocks</h2><div id="tet-score">0</div><button class="bg-blue-600 px-4 py-1 rounded" onclick="Tetris.init()">Restart</button></div>
-            <div class="canvas-container relative">
-                <canvas id="c-tetris" width="300" height="600"></canvas>
-                <div id="tet-overlay" class="absolute inset-0 bg-black/80 flex-center flex-col hidden"><h2 class="text-3xl text-red-500 mb-4">GAME OVER</h2><button class="bg-blue-600 px-6 py-2 rounded" onclick="Tetris.init()">Play Again</button></div>
-            </div>
-            <div class="text-center p-2 text-slate-400 text-sm hidden md:block">Arrow Keys: Move/Rotate | Down: Drop</div>
-            <div class="flex justify-center gap-2 p-2 md:hidden">
-                <button class="bg-slate-700 p-4 rounded text-xl" onclick="Tetris.input(-1,0)">⬅️</button>
-                <button class="bg-slate-700 p-4 rounded text-xl" onclick="Tetris.input(1,0)">➡️</button>
-                <button class="bg-slate-700 p-4 rounded text-xl" onclick="Tetris.rotate()">🔄</button>
-                <button class="bg-slate-700 p-4 rounded text-xl" onclick="Tetris.input(0,1)">⬇️</button>
-            </div>
-        </div>
+        <!-- Canvas Views -->
+        <div id="v-bubble" class="view"><div class="header"><h2>Bubble Shooter (Mouse Aim/Click)</h2><div id="bub-score" class="text-emerald-400 font-bold">Score: 0</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="Bubble.init()">Restart</button></div><div class="canvas-container"><canvas id="c-bubble" width="600" height="800"></canvas></div></div>
+        <div id="v-gravity" class="view"><div class="header"><h2>Gravity Blocks (Arrows: Move/Rotate. Down: Drop)</h2><div id="grav-score" class="text-emerald-400 font-bold">Score: 0</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="Gravity.init()">Restart</button></div><div class="canvas-container"><canvas id="c-gravity" width="300" height="600"></canvas></div></div>
+        <div id="v-dogfight" class="view"><div class="header"><h2>Aerial Dogfight (P1: WASD+Space | P2: Arrows+Enter)</h2><button class="bg-blue-600 px-4 py-2 rounded" onclick="Dogfight.init()">Restart</button></div><div class="canvas-container"><canvas id="c-dogfight" width="1000" height="700"></canvas></div></div>
+        <div id="v-pong" class="view"><div class="header"><h2>Retro Pong (P1: W/S | P2: Up/Down)</h2><div id="pong-score" class="text-emerald-400 font-bold text-2xl">0 - 0</div><button class="bg-blue-600 px-4 py-2 rounded" onclick="Pong.init()">Restart</button></div><div class="canvas-container"><canvas id="c-pong" width="1000" height="600"></canvas></div></div>
 
-        <!-- DOM Grids -->
-        <div id="v-jewel" class="view">
-            <div class="header"><h2>Jewel Match</h2><div id="jw-score" class="text-emerald-400">Score: 0</div><button class="bg-blue-600 px-4 py-1 rounded" onclick="Jewel.init()">Restart</button></div>
-            <div class="play-area flex-center"><div id="board-jewel" class="grid-board" style="grid-template-columns: repeat(8, 1fr);"></div></div>
-        </div>
-        <div id="v-gemdrop" class="view">
-            <div class="header"><h2>Gem Drop</h2><div id="gd-score" class="text-emerald-400">Score: 0</div><button class="bg-blue-600 px-4 py-1 rounded" onclick="GemDrop.init()">Restart</button></div>
-            <div class="play-area flex-center"><div id="board-gemdrop" class="grid-board" style="grid-template-columns: repeat(10, 1fr);"></div></div>
-        </div>
-        <div id="v-mahjong" class="view">
-            <div class="header"><h2>Mahjong 3D</h2><div id="mj-rem" class="text-emerald-400">Tiles: 144</div><button class="bg-blue-600 px-4 py-1 rounded" onclick="Mahjong.init()">Restart</button></div>
-            <div class="play-area" id="board-mahjong"></div>
-        </div>
-
-        <!-- Shared Modal -->
-        <div id="win-modal" class="modal hidden flex-center">
+        <!-- Global Modal -->
+        <div id="msg-modal" class="modal">
             <div class="modal-box">
-                <h1 class="text-4xl mb-4 text-emerald-400 font-bold" id="win-title">Victory!</h1>
-                <p class="text-lg text-slate-300 mb-6" id="win-msg">You have cleared the board.</p>
-                <button class="bg-blue-600 px-8 py-3 rounded-lg font-bold w-full" onclick="$('win-modal').classList.add('hidden'); app.restartCurrent();">Play Again</button>
+                <h1 class="text-4xl mb-4 font-bold" id="msg-title">Title</h1>
+                <p class="text-lg text-slate-300 mb-6" id="msg-desc">Desc</p>
+                <button class="bg-blue-600 px-8 py-3 rounded-lg font-bold w-full" onclick="$('msg-modal').classList.remove('active'); app.restartCurrent();">Play Again</button>
             </div>
         </div>
     </main>
@@ -173,758 +119,449 @@
     const $ = id => document.getElementById(id);
     const $$ = q => document.querySelectorAll(q);
     const ctx = id => $(id).getContext('2d');
+    
+    // Global Key tracking for arcade games
+    const keys = {};
+    window.onkeydown = e => { keys[e.code] = true; if(['Space','ArrowUp','ArrowDown'].includes(e.code)) e.preventDefault(); };
+    window.onkeyup = e => { keys[e.code] = false; };
 
-    // App State Manager
     const app = {
-        current: 'klondike',
+        cur: 'klondike', loops: [],
         show: function(id) {
-            $$('.view').forEach(v => v.classList.remove('active'));
-            $$('.nav-btn').forEach(b => b.classList.remove('active'));
+            $$('.view, .nav-btn').forEach(el => el.classList.remove('active'));
             $(`v-${id}`).classList.add('active');
             event.currentTarget.classList.add('active');
-            this.current = id;
+            this.cur = id;
+            this.loops.forEach(cancelAnimationFrame); this.loops = [];
             
-            // Stop Canvas Loops
-            Bubble.running = false; Tetris.running = false;
-            
-            // Init Game
-            if(id === 'klondike') Klondike.init();
-            else if(id === 'tripeaks') TriPeaks.init();
-            else if(id === 'spider') Spider.init();
-            else if(id === 'freecell') FreeCell.init();
-            else if(id === 'pyramid') Pyramid.init();
-            else if(id === 'bubble') Bubble.init();
-            else if(id === 'jewel') Jewel.init();
-            else if(id === 'tetris') Tetris.init();
-            else if(id === 'gemdrop') GemDrop.init();
-            else if(id === 'mahjong') Mahjong.init();
+            const gmap = {
+                klondike: Klondike, freecell: FreeCell, spider: Spider, tripeaks: TriPeaks, pyramid: Pyramid,
+                jewel: Jewel, gemdrop: GemDrop, mahjong: Mahjong, bubble: Bubble, gravity: Gravity, dogfight: Dogfight, pong: Pong
+            };
+            if(gmap[id]) gmap[id].init();
         },
-        restartCurrent: function() {
-            this.show(this.current);
-        },
-        win: function(msg = "You solved the puzzle!") {
-            $('win-msg').innerText = msg;
-            $('win-modal').classList.remove('hidden');
-        }
+        restartCurrent: function() { this.show(this.cur); },
+        msg: function(t, d, c="text-emerald-400") { $('msg-title').innerText=t; $('msg-title').className=`text-4xl mb-4 font-bold ${c}`; $('msg-desc').innerText=d; $('msg-modal').classList.add('active'); }
     };
 
-    // Shared Card Engine
-    const SUITS = ['♠','♥','♦','♣'];
-    const COLORS = ['black','red','red','black'];
-    const VALS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-    
-    function createDeck(suitsArr=[0,1,2,3], numDecks=1) {
-        let d = [];
-        for(let n=0; n<numDecks; n++)
-            for(let s of suitsArr) 
-                for(let v=1; v<=13; v++) 
-                    d.push({ id: Math.random().toString(36).substr(2,9), s, v, color: COLORS[s], up: false });
-        // Fisher-Yates
-        for(let i=d.length-1; i>0; i--) {
-            const j = Math.floor(Math.random()*(i+1));
-            [d[i], d[j]] = [d[j], d[i]];
+    const Cards = {
+        suits: ['♠','♥','♦','♣'], cols: ['black','red','red','black'], vals: ['A','2','3','4','5','6','7','8','9','10','J','Q','K'],
+        deck: function(suitFilter=[0,1,2,3], num=1) {
+            let d = [];
+            for(let n=0; n<num; n++) for(let s of suitFilter) for(let v=1; v<=13; v++) 
+                d.push({ id: Math.random().toString(36).substring(2,9), s, v, color: this.cols[s], up: false });
+            for(let i=d.length-1; i>0; i--) { let j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
+            return d;
+        },
+        html: function(c, x, y, z, onclick, p, idx, selId) {
+            if(!c) return `<div class="slot" style="left:${x}px;top:${y}px" onclick="${onclick}('${p}',${idx})"></div>`;
+            const sel = selId === c.id ? 'selected' : '';
+            if(!c.up) return `<div class="card back ${sel}" style="left:${x}px;top:${y}px;z-index:${z}" onclick="${onclick}('${p}',${idx})"><div></div></div>`;
+            return `<div class="card ${c.color} ${sel}" style="left:${x}px;top:${y}px;z-index:${z}" onclick="${onclick}('${p}',${idx})">
+                <div class="c-top"><span class="c-val">${this.vals[c.v-1]}</span><span class="c-suit">${this.suits[c.s]}</span></div>
+                <div class="c-center">${this.suits[c.s]}</div>
+                <div class="c-bot"><span class="c-val">${this.vals[c.v-1]}</span><span class="c-suit">${this.suits[c.s]}</span></div></div>`;
         }
-        return d;
-    }
-
-    function renderCard(c, x, y, z, onClick, pile, idx) {
-        if(!c) return `<div class="slot" style="left:${x}px;top:${y}px" onclick="${onClick}('${pile}',${idx})"></div>`;
-        const selCls = (CardEngine.sel && CardEngine.sel.c.id === c.id) ? 'selected' : '';
-        if(!c.up) return `<div class="card back ${selCls}" style="left:${x}px;top:${y}px;z-index:${z}" onclick="${onClick}('${pile}',${idx})"><div></div></div>`;
-        return `
-            <div class="card ${c.color} ${selCls}" style="left:${x}px;top:${y}px;z-index:${z}" onclick="${onClick}('${pile}',${idx})">
-                <div class="c-top"><span class="c-val">${VALS[c.v-1]}</span><span class="c-suit">${SUITS[c.s]}</span></div>
-                <div class="c-center">${SUITS[c.s]}</div>
-                <div class="c-bot"><span class="c-val">${VALS[c.v-1]}</span><span class="c-suit">${SUITS[c.s]}</span></div>
-            </div>`;
-    }
-
-    // Unified Click-to-Move Handler
-    const CardEngine = {
-        sel: null,
-        dims: () => window.innerWidth > 768 ? {cw:76, ch:108, g:12} : {cw:60, ch:85, g:8},
-        clear: () => { CardEngine.sel = null; }
     };
 
     const Klondike = {
-        st: {},
+        st: {}, sel: null,
         init: function() {
-            CardEngine.clear();
-            let d = createDeck();
+            this.sel = null; let d = Cards.deck();
             this.st = { s: d, w: [], f: [[],[],[],[]], t: [[],[],[],[],[],[],[]] };
-            for(let i=0; i<7; i++) {
-                for(let j=0; j<=i; j++) {
-                    let c = this.st.s.pop();
-                    if(j===i) c.up = true;
-                    this.st.t[i].push(c);
-                }
-            }
-            this.render();
+            for(let i=0; i<7; i++) for(let j=0; j<=i; j++) { let c = this.st.s.pop(); if(j===i) c.up=true; this.st.t[i].push(c); }
+            this.draw();
         },
-        click: function(pStr, idx) {
-            let p = pStr.split('-')[0], pIdx = parseInt(pStr.split('-')[1]);
-            let s = this.st, sel = CardEngine.sel;
-
-            // Handle Stock
+        clk: function(p, i) {
+            let s = this.st, sel = this.sel, tPile = p==='w'?s.w : p.startsWith('f')?s.f[p[1]] : s.t[p[1]], tCard = tPile[i];
             if(p === 's') {
-                if(s.s.length > 0) { let c=s.s.pop(); c.up=true; s.w.push(c); }
-                else { s.s = s.w.reverse(); s.s.forEach(c=>c.up=false); s.w=[]; }
-                CardEngine.clear(); this.render(); return;
+                if(s.s.length) { let c=s.s.pop(); c.up=true; s.w.push(c); } else { s.s=s.w.reverse(); s.s.forEach(c=>c.up=false); s.w=[]; }
+                this.sel = null; this.draw(); return;
             }
-
-            // Get target stack
-            let targetPile = p==='w'?s.w : p==='f'?s.f[pIdx] : s.t[pIdx];
-            let targetCard = targetPile[idx];
-
             if(!sel) {
-                // Select
-                if(targetPile.length === 0) return;
-                if(!targetCard.up) return;
-                // Validate selection (only top for waste/foundation, sequence for tableau)
-                if(p==='w' && idx !== s.w.length-1) return;
-                if(p==='f' && idx !== targetPile.length-1) return;
-                CardEngine.sel = { c: targetCard, p, pIdx, idx };
+                if(!tPile.length || !tCard.up) return;
+                if((p==='w' && i!==s.w.length-1) || (p.startsWith('f') && i!==tPile.length-1)) return;
+                this.sel = { c: tCard, p, pIdx: p[1], i };
             } else {
-                // Drop
-                if(sel.p === p && sel.pIdx === pIdx) { CardEngine.clear(); this.render(); return; } // Deselect
+                if(sel.p === p && sel.pIdx === p[1]) { this.sel = null; this.draw(); return; }
+                let top = tPile.length ? tPile[tPile.length-1] : null, v = false;
+                if(p.startsWith('f')) v = (sel.i === (sel.p==='w'?s.w.length-1:sel.p.startsWith('f')?s.f[sel.pIdx].length-1:s.t[sel.pIdx].length-1)) && (!top ? sel.c.v===1 : (sel.c.s===top.s && sel.c.v===top.v+1));
+                else if(p.startsWith('t')) v = !top ? sel.c.v===13 : (sel.c.color!==top.color && sel.c.v===top.v-1);
                 
-                let valid = false;
-                let topTgt = targetPile.length > 0 ? targetPile[targetPile.length-1] : null;
-
-                if(p==='f') {
-                    if(sel.idx !== (sel.p==='w'?s.w.length-1 : sel.p==='f'?s.f[sel.pIdx].length-1 : s.t[sel.pIdx].length-1)) valid=false; // must be single
-                    else if(!topTgt) valid = sel.c.v === 1;
-                    else valid = (sel.c.s === topTgt.s && sel.c.v === topTgt.v + 1);
-                } else if(p==='t') {
-                    if(!topTgt) valid = sel.c.v === 13;
-                    else valid = (sel.c.color !== topTgt.color && sel.c.v === topTgt.v - 1);
-                }
-
-                if(valid) {
-                    let sourcePile = sel.p==='w'?s.w : sel.p==='f'?s.f[sel.pIdx] : s.t[sel.pIdx];
-                    let moved = sourcePile.splice(sel.idx);
-                    if(sourcePile.length > 0 && !sourcePile[sourcePile.length-1].up) sourcePile[sourcePile.length-1].up = true;
-                    
-                    if(p==='f') s.f[pIdx].push(...moved);
-                    else s.t[pIdx].push(...moved);
-                    
-                    CardEngine.clear();
-                    
-                    // Check win
-                    if(s.f.reduce((acc,f)=>acc+f.length,0) === 52) app.win();
-                } else {
-                    CardEngine.clear(); // Invalid move cancels
-                }
+                if(v) {
+                    let sPile = sel.p==='w'?s.w : sel.p.startsWith('f')?s.f[sel.pIdx] : s.t[sel.pIdx];
+                    let m = sPile.splice(sel.i);
+                    if(sPile.length && !sPile[sPile.length-1].up) sPile[sPile.length-1].up = true;
+                    p.startsWith('f') ? s.f[p[1]].push(...m) : s.t[p[1]].push(...m);
+                    this.sel = null; if(s.f.reduce((a,f)=>a+f.length,0)===52) app.msg("Victory!","Klondike solved.");
+                } else this.sel = null;
             }
-            this.render();
+            this.draw();
         },
-        render: function() {
-            const b = $('board-klondike'); b.innerHTML = '';
-            let {cw, ch, g} = CardEngine.dims();
-            let sx = g, sy = g;
+        draw: function() {
+            let b=$('b-klondike'), h='', g=10, cw=70, ch=100;
+            h += Cards.html(null, g, g, 0, 'Klondike.clk', 's', 0);
+            if(this.st.s.length) h += Cards.html(this.st.s[this.st.s.length-1], g, g, 1, 'Klondike.clk', 's', 0, this.sel?.c.id);
+            h += Cards.html(null, g+cw+g, g, 0, '', '', 0);
+            let wl=this.st.w.length; for(let i=Math.max(0,wl-3); i<wl; i++) h += Cards.html(this.st.w[i], g+cw+g+(i-Math.max(0,wl-3))*15, g, i+1, 'Klondike.clk', 'w', i, this.sel?.c.id);
+            for(let i=0; i<4; i++) { h+=Cards.html(null, g+(3+i)*(cw+g), g, 0, 'Klondike.clk', `f${i}`, 0); if(this.st.f[i].length) h+=Cards.html(this.st.f[i][this.st.f[i].length-1], g+(3+i)*(cw+g), g, 1, 'Klondike.clk', `f${i}`, this.st.f[i].length-1, this.sel?.c.id); }
+            for(let i=0; i<7; i++) { h+=Cards.html(null, g+i*(cw+g), g+ch+g, 0, 'Klondike.clk', `t${i}`, 0); let y=g+ch+g; for(let j=0; j<this.st.t[i].length; j++) { let c=this.st.t[i][j]; h+=Cards.html(c, g+i*(cw+g), y, j+1, 'Klondike.clk', `t${i}`, j, this.sel?.c.id); y+=c.up?24:10; } }
+            b.innerHTML = h;
+        }
+    };
 
-            // Stock & Waste
-            b.innerHTML += renderCard(null, sx, sy, 0, 'Klondike.click', 's', 0);
-            if(this.st.s.length) b.innerHTML += renderCard(this.st.s[this.st.s.length-1], sx, sy, 1, 'Klondike.click', 's', 0);
-            
-            b.innerHTML += renderCard(null, sx+cw+g, sy, 0, '', '', 0);
-            let wLen = this.st.w.length;
-            for(let i=Math.max(0, wLen-3); i<wLen; i++) {
-                b.innerHTML += renderCard(this.st.w[i], sx+cw+g + (i-(Math.max(0, wLen-3)))*15, sy, i+1, 'Klondike.click', 'w', i);
+    const FreeCell = {
+        st: {}, sel: null,
+        init: function() {
+            this.sel = null; let d = Cards.deck(); d.forEach(c=>c.up=true);
+            this.st = { c: [null,null,null,null], f: [[],[],[],[]], t: [[],[],[],[],[],[],[],[]] };
+            let i=0; while(d.length) { this.st.t[i].push(d.pop()); i=(i+1)%8; }
+            this.draw();
+        },
+        clk: function(p, i) {
+            let s = this.st, sel = this.sel, pI = p[1], tP = p.startsWith('c')?[s.c[pI]]:p.startsWith('f')?s.f[pI]:s.t[pI];
+            if(!sel) {
+                if(p.startsWith('c') && !s.c[pI]) return;
+                if(p.startsWith('f') || (p.startsWith('t') && i!==s.t[pI].length-1 && s.t[pI].length>0)) { if(p.startsWith('t') && i===s.t[pI].length-1) {} else return; }
+                this.sel = { c: p.startsWith('c')?s.c[pI]:tP[tP.length-1], p, pI, i };
+            } else {
+                if(sel.p===p && sel.pI===pI) { this.sel=null; this.draw(); return; }
+                let top = p.startsWith('c')?s.c[pI] : tP.length?tP[tP.length-1]:null, v = false;
+                if(p.startsWith('c')) v = !top;
+                else if(p.startsWith('f')) v = !top ? sel.c.v===1 : (sel.c.s===top.s && sel.c.v===top.v+1);
+                else if(p.startsWith('t')) v = !top || (sel.c.color!==top.color && sel.c.v===top.v-1);
+                
+                if(v) {
+                    let m = sel.p.startsWith('c')?s.c[sel.pI] : s.t[sel.pI].pop();
+                    if(sel.p.startsWith('c')) s.c[sel.pI]=null;
+                    if(p.startsWith('c')) s.c[pI]=m; else if(p.startsWith('f')) s.f[pI].push(m); else s.t[pI].push(m);
+                    this.sel=null; if(s.f.reduce((a,f)=>a+f.length,0)===52) app.msg("Victory!","FreeCell solved.");
+                } else this.sel=null;
             }
+            this.draw();
+        },
+        draw: function() {
+            let b=$('b-freecell'), h='', g=10, cw=70, ch=100;
+            for(let i=0; i<4; i++) { h+=Cards.html(this.st.c[i], g+i*(cw+g), g, 0, 'FreeCell.clk', `c${i}`, 0, this.sel?.c.id); h+=Cards.html(null, g+(4+i)*(cw+g), g, 0, 'FreeCell.clk', `f${i}`, 0); if(this.st.f[i].length) h+=Cards.html(this.st.f[i][this.st.f[i].length-1], g+(4+i)*(cw+g), g, 1, 'FreeCell.clk', `f${i}`, 0, this.sel?.c.id); }
+            for(let i=0; i<8; i++) { h+=Cards.html(null, g+i*(cw+g), g+ch+g, 0, 'FreeCell.clk', `t${i}`, 0); for(let j=0; j<this.st.t[i].length; j++) h+=Cards.html(this.st.t[i][j], g+i*(cw+g), g+ch+g+j*25, j+1, 'FreeCell.clk', `t${i}`, j, this.sel?.c.id); }
+            b.innerHTML = h;
+        }
+    };
 
-            // Foundations
-            for(let i=0; i<4; i++) {
-                let x = sx + (3+i)*(cw+g);
-                b.innerHTML += renderCard(null, x, sy, 0, 'Klondike.click', `f-${i}`, 0);
-                if(this.st.f[i].length) b.innerHTML += renderCard(this.st.f[i][this.st.f[i].length-1], x, sy, 1, 'Klondike.click', `f-${i}`, this.st.f[i].length-1);
+    const Spider = {
+        st: {}, sel: null,
+        init: function() {
+            this.sel = null; let d = Cards.deck([0], 8);
+            this.st = { s: d, t: Array.from({length:10},()=>[]), comp: 0 };
+            for(let i=0; i<10; i++) { let l = i<4?6:5; for(let j=0; j<l; j++) { let c=d.pop(); if(j===l-1) c.up=true; this.st.t[i].push(c); } }
+            this.draw();
+        },
+        clk: function(p, i) {
+            let s=this.st, sel=this.sel;
+            if(p==='s') { if(s.s.length>=10 && s.t.every(t=>t.length>0)) { for(let i=0; i<10; i++) { let c=s.s.pop(); c.up=true; s.t[i].push(c); } this.chk(); this.draw(); } return; }
+            let pI=p[1], tP = s.t[pI];
+            if(!sel) {
+                if(!tP.length || !tP[i].up) return;
+                for(let j=i; j<tP.length-1; j++) if(tP[j].v !== tP[j+1].v+1) return;
+                this.sel = { p, pI, i };
+            } else {
+                if(sel.pI===pI) { this.sel=null; this.draw(); return; }
+                if(!tP.length || s.t[sel.pI][sel.i].v === tP[tP.length-1].v-1) {
+                    let m = s.t[sel.pI].splice(sel.i);
+                    if(s.t[sel.pI].length) s.t[sel.pI][s.t[sel.pI].length-1].up = true;
+                    s.t[pI].push(...m); this.sel=null; this.chk(); if(s.comp===8) app.msg("Victory!","Spider solved.");
+                } else this.sel=null;
             }
-
-            // Tableaus
-            for(let i=0; i<7; i++) {
-                let x = sx + i*(cw+g), y = sy + ch + g;
-                b.innerHTML += renderCard(null, x, y, 0, 'Klondike.click', `t-${i}`, 0);
-                for(let j=0; j<this.st.t[i].length; j++) {
-                    let c = this.st.t[i][j];
-                    b.innerHTML += renderCard(c, x, y, j+1, 'Klondike.click', `t-${i}`, j);
-                    y += c.up ? 24 : 10;
-                }
-            }
+            this.draw();
+        },
+        chk: function() {
+            this.st.t.forEach(t => {
+                if(t.length>=13) { let r=true; for(let i=0; i<13; i++) { let c=t[t.length-13+i]; if(!c.up || c.v!==13-i) {r=false; break;} }
+                if(r) { t.splice(t.length-13); this.st.comp++; if(t.length) t[t.length-1].up=true; } }
+            });
+        },
+        draw: function() {
+            let b=$('b-spider'), h='', g=10, cw=Math.min(70, (b.clientWidth-20)/10-4), ch=100;
+            h+=`<div class="slot" style="left:${g}px;top:${g}px;width:${cw}px" onclick="Spider.clk('s',0)">↓</div>`;
+            if(this.st.s.length) h+=`<div class="card back" style="left:${g}px;top:${g}px;width:${cw}px" onclick="Spider.clk('s',0)"></div>`;
+            for(let i=0; i<this.st.comp; i++) h+=`<div class="card black" style="left:${g+(9*(cw+4))-(i*10)}px;top:${g}px;width:${cw}px"><div class="c-center">♠</div></div>`;
+            for(let i=0; i<10; i++) { let x=g+i*(cw+4), y=g+ch+g; h+=`<div class="slot" style="left:${x}px;top:${y}px;width:${cw}px" onclick="Spider.clk('t${i}',0)"></div>`; for(let j=0; j<this.st.t[i].length; j++) { let c=this.st.t[i][j]; h+=Cards.html(c, x, y, j, 'Spider.clk', `t${i}`, j, this.sel?.pI==i&&j>=this.sel.i ? c.id:null).replace('class="card', `style="width:${cw}px; left:${x}px; top:${y}px; z-index:${j}" class="card`); y+=c.up?20:8; } }
+            b.innerHTML = h;
         }
     };
 
     const TriPeaks = {
         st: {},
         init: function() {
-            let d = createDeck();
-            let b = [];
-            for(let i=0; i<28; i++) b.push({c: d.pop(), active:true, cover:[]});
-            
-            // Map covers (standard overlapping peaks)
-            const covers = {0:[3,4],1:[5,6],2:[7,8], 3:[9,10],4:[10,11],5:[12,13],6:[13,14],7:[15,16],8:[16,17],
-                9:[18,19],10:[19,20],11:[20,21],12:[21,22],13:[22,23],14:[23,24],15:[24,25],16:[25,26],17:[26,27]};
-            for(let k in covers) b[k].cover = covers[k];
-
-            this.st = { b, s: d, w: [d.pop()], score: 0, streak: 0 };
-            this.st.w[0].up = true;
-            this.updateUp(); this.render();
+            let d = Cards.deck(), b = [];
+            for(let i=0; i<28; i++) b.push({c: d.pop(), act:true, cov: [0:[3,4],1:[5,6],2:[7,8],3:[9,10],4:[10,11],5:[12,13],6:[13,14],7:[15,16],8:[16,17],9:[18,19],10:[19,20],11:[20,21],12:[21,22],13:[22,23],14:[23,24],15:[24,25],16:[25,26],17:[26,27]}[i]||[] });
+            this.st = { b, s: d, w: [d.pop()], sc: 0, str: 0 }; this.st.w[0].up = true; this.upd(); this.draw();
         },
-        updateUp: function() {
-            this.st.b.forEach(node => {
-                if(node.active) node.c.up = !node.cover.some(i => this.st.b[i].active);
-            });
+        upd: function() { this.st.b.forEach(n => { if(n.act) n.c.up = !n.cov.some(i => this.st.b[i].act); }); },
+        clk: function(i) {
+            let s=this.st;
+            if(i==='s') { if(s.s.length) { let c=s.s.pop(); c.up=true; s.w.push(c); s.str=0; this.draw(); } return; }
+            let n=s.b[i]; if(!n.act || !n.c.up) return;
+            let tw=s.w[s.w.length-1], diff = Math.abs(n.c.v - tw.v);
+            if(diff===1 || diff===12) { n.act=false; s.w.push(n.c); s.str++; s.sc+=s.str*100; $('tp-score').innerText='Score: '+s.sc; this.upd(); this.draw(); if(s.b.every(n=>!n.act)) app.msg("Victory!",`Score: ${s.sc}`); }
         },
-        click: function(idx) {
-            let s = this.st;
-            if(idx === 'stock') {
-                if(s.s.length > 0) { let c=s.s.pop(); c.up=true; s.w.push(c); s.streak=0; this.render(); }
-                return;
-            }
-            let node = s.b[idx];
-            if(!node.active || !node.c.up) return;
-            
-            let topW = s.w[s.w.length-1];
-            let diff = Math.abs(node.c.v - topW.v);
-            if(diff === 1 || diff === 12) { // 12 handles wrap (K=13, A=1)
-                node.active = false;
-                s.w.push(node.c);
-                s.streak++; s.score += s.streak * 100;
-                $('tp-score').innerText = 'Score: ' + s.score;
-                this.updateUp(); this.render();
-                
-                if(s.b.every(n => !n.active)) app.win(`TriPeaks Cleared! Score: ${s.score}`);
-            }
-        },
-        render: function() {
-            const b = $('board-tripeaks'); b.innerHTML = '';
-            let {cw, ch} = CardEngine.dims();
-            let ox = board.clientWidth/2, oy = 20;
-
-            const rx = [-2.5, 0, 2.5, -3, -2, 0, 1, 2, 3, -3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5, 4.5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]; // approx offsets
-            const yRows = [0, ch*0.6, ch*1.2, ch*1.8];
-            const getRow = i => i<3?0 : i<9?1 : i<18?2 : 3;
-            
-            // Adjust X array for standard 3 peaks spacing manually for compact code
-            const r0 = [-3, 0, 3]; const r1 = [-3.5,-2.5, -0.5,0.5, 2.5,3.5]; const r2 = [-4,-3,-2, -1,0,1, 2,3,4]; const r3 = [-4.5,-3.5,-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5];
-            const xMap = [...r0, ...r1, ...r2, ...r3];
-
-            this.st.b.forEach((node, i) => {
-                if(node.active) b.innerHTML += renderCard(node.c, ox + xMap[i]*(cw*0.6) - cw/2, oy + yRows[getRow(i)], i, 'TriPeaks.click', i);
-            });
-
-            // Stock/Waste at bottom
-            let by = oy + ch*2.5;
-            b.innerHTML += renderCard(null, ox - cw - 10, by, 0, 'TriPeaks.click', 'stock');
-            if(this.st.s.length) b.innerHTML += renderCard(this.st.s[this.st.s.length-1], ox - cw - 10, by, 1, 'TriPeaks.click', 'stock');
-            
-            if(this.st.w.length) b.innerHTML += renderCard(this.st.w[this.st.w.length-1], ox + 10, by, 1, 'TriPeaks.click', 'waste');
-        }
-    };
-
-    const Spider = {
-        st: {},
-        init: function() {
-            CardEngine.clear();
-            let d = createDeck([0], 8); // 8 decks of spades
-            this.st = { s: d, t: [[],[],[],[],[],[],[],[],[],[]], comp: 0 };
-            for(let i=0; i<10; i++) {
-                let limit = i<4 ? 6 : 5;
-                for(let j=0; j<limit; j++) { let c = d.pop(); if(j===limit-1) c.up=true; this.st.t[i].push(c); }
-            }
-            this.render();
-        },
-        click: function(pStr, idx) {
-            let p = pStr.split('-')[0], pIdx = parseInt(pStr.split('-')[1]);
-            let s = this.st, sel = CardEngine.sel;
-
-            if(p === 's') {
-                if(s.s.length >= 10 && s.t.every(tab=>tab.length>0)) {
-                    for(let i=0; i<10; i++) { let c=s.s.pop(); c.up=true; s.t[i].push(c); }
-                    this.checkComp(); this.render();
-                }
-                return;
-            }
-
-            let tPile = s.t[pIdx];
-            if(!sel) {
-                if(tPile.length===0 || !tPile[idx].up) return;
-                // Validate descending run from idx to end
-                for(let i=idx; i<tPile.length-1; i++) if(tPile[i].v !== tPile[i+1].v + 1) return;
-                CardEngine.sel = { p, pIdx, idx };
-            } else {
-                if(sel.pIdx === pIdx) { CardEngine.clear(); this.render(); return; }
-                let valid = false;
-                if(tPile.length === 0) valid = true;
-                else valid = s.t[sel.pIdx][sel.idx].v === tPile[tPile.length-1].v - 1;
-
-                if(valid) {
-                    let moved = s.t[sel.pIdx].splice(sel.idx);
-                    if(s.t[sel.pIdx].length) s.t[sel.pIdx][s.t[sel.pIdx].length-1].up = true;
-                    s.t[pIdx].push(...moved);
-                    CardEngine.clear();
-                    this.checkComp();
-                    if(s.comp === 8) app.win();
-                } else CardEngine.clear();
-            }
-            this.render();
-        },
-        checkComp: function() {
-            this.st.t.forEach(tab => {
-                if(tab.length >= 13) {
-                    let run = true;
-                    for(let i=0; i<13; i++) {
-                        let c = tab[tab.length-13+i];
-                        if(!c.up || c.v !== 13-i) { run = false; break; }
-                    }
-                    if(run) { tab.splice(tab.length-13); this.st.comp++; if(tab.length) tab[tab.length-1].up = true; }
-                }
-            });
-        },
-        render: function() {
-            const b = $('board-spider'); b.innerHTML = '';
-            let {cw, ch} = CardEngine.dims();
-            let bw = board.clientWidth;
-            let actW = Math.min(cw, (bw - 20) / 10 - 4); // Scale for spider columns
-            let sx = 10, sy = 20, stepX = actW + 4;
-
-            // Stock
-            b.innerHTML += `<div class="slot" style="left:${sx}px;top:${sy}px;width:${actW}px" onclick="Spider.click('s',0)">↓</div>`;
-            if(this.st.s.length) b.innerHTML += `<div class="card back" style="left:${sx}px;top:${sy}px;width:${actW}px" onclick="Spider.click('s',0)"></div>`;
-
-            // Completed
-            for(let i=0; i<this.st.comp; i++) {
-                b.innerHTML += `<div class="card black" style="left:${sx + (9*stepX) - (i*10)}px;top:${sy}px;width:${actW}px"><div class="c-center">♠</div></div>`;
-            }
-
-            // Tableaus
-            sy += ch + 10;
-            for(let i=0; i<10; i++) {
-                let x = sx + i*stepX, y = sy;
-                b.innerHTML += `<div class="slot" style="left:${x}px;top:${y}px;width:${actW}px" onclick="Spider.click('t-${i}',0)"></div>`;
-                for(let j=0; j<this.st.t[i].length; j++) {
-                    let c = this.st.t[i][j];
-                    let html = renderCard(c, x, y, j, 'Spider.click', `t-${i}`, j);
-                    // inject width hack for spider
-                    html = html.replace('class="card', `style="width:${actW}px; left:${x}px; top:${y}px; z-index:${j}" class="card`);
-                    b.innerHTML += html;
-                    y += c.up ? 20 : 8;
-                }
-            }
-        }
-    };
-
-    const FreeCell = {
-        st: {},
-        init: function() {
-            CardEngine.clear();
-            let d = createDeck(); d.forEach(c=>c.up=true);
-            this.st = { c: [null,null,null,null], f: [[],[],[],[]], t: [[],[],[],[],[],[],[],[]] };
-            let col = 0; while(d.length) { this.st.t[col].push(d.pop()); col = (col+1)%8; }
-            this.render();
-        },
-        click: function(pStr, idx) {
-            let p = pStr.split('-')[0], pIdx = parseInt(pStr.split('-')[1]);
-            let s = this.st, sel = CardEngine.sel;
-            let tPile = p==='c'? [s.c[pIdx]] : p==='f'?s.f[pIdx] : s.t[pIdx];
-
-            if(!sel) {
-                if(p==='c' && !s.c[pIdx]) return;
-                if(p==='f' || (p==='t' && idx !== s.t[pIdx].length-1 && s.t[pIdx].length>0)) {
-                     if(p==='t') { // FreeCell run selection logic (simplified: only single cards to save space)
-                         if(idx !== s.t[pIdx].length-1) return; // Enforce 1 card move for strict rules in limited code
-                     } else return; 
-                }
-                CardEngine.sel = { c: p==='c'?s.c[pIdx] : tPile[tPile.length-1], p, pIdx, idx };
-            } else {
-                if(sel.p === p && sel.pIdx === pIdx) { CardEngine.clear(); this.render(); return; }
-                let valid = false;
-                let topTgt = p==='c'?s.c[pIdx] : (tPile.length ? tPile[tPile.length-1] : null);
-
-                if(p==='c') valid = !topTgt;
-                else if(p==='f') valid = !topTgt ? sel.c.v===1 : (sel.c.s===topTgt.s && sel.c.v===topTgt.v+1);
-                else if(p==='t') valid = !topTgt || (sel.c.color!==topTgt.color && sel.c.v===topTgt.v-1);
-
-                if(valid) {
-                    let moved = sel.p==='c'?s.c[sel.pIdx] : (sel.p==='t'?s.t[sel.pIdx].pop() : null);
-                    if(sel.p==='c') s.c[sel.pIdx] = null;
-                    if(p==='c') s.c[pIdx] = moved;
-                    else if(p==='f') s.f[pIdx].push(moved);
-                    else s.t[pIdx].push(moved);
-                    CardEngine.clear();
-                    if(s.f.reduce((a,f)=>a+f.length,0)===52) app.win();
-                } else CardEngine.clear();
-            }
-            this.render();
-        },
-        render: function() {
-            const b = $('board-freecell'); b.innerHTML = '';
-            let {cw, ch, g} = CardEngine.dims();
-            let sx = g, sy = g;
-            
-            for(let i=0; i<4; i++) {
-                b.innerHTML += renderCard(this.st.c[i], sx+i*(cw+g), sy, 0, 'FreeCell.click', `c-${i}`, 0);
-                let xF = sx + (4+i)*(cw+g);
-                b.innerHTML += renderCard(null, xF, sy, 0, 'FreeCell.click', `f-${i}`, 0);
-                if(this.st.f[i].length) b.innerHTML += renderCard(this.st.f[i][this.st.f[i].length-1], xF, sy, 1, 'FreeCell.click', `f-${i}`, 0);
-            }
-            for(let i=0; i<8; i++) {
-                let x = sx + i*(cw+g), y = sy + ch + g;
-                b.innerHTML += renderCard(null, x, y, 0, 'FreeCell.click', `t-${i}`, 0);
-                for(let j=0; j<this.st.t[i].length; j++) {
-                    b.innerHTML += renderCard(this.st.t[i][j], x, y+j*26, j+1, 'FreeCell.click', `t-${i}`, j);
-                }
-            }
+        draw: function() {
+            let b=$('b-tripeaks'), h='', w=b.clientWidth, cw=70, ch=100, ox=w/2, oy=20;
+            const xm=[-3,0,3, -3.5,-2.5,-0.5,0.5,2.5,3.5, -4,-3,-2,-1,0,1,2,3,4, -4.5,-3.5,-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5], yr=[0, 60, 120, 180];
+            this.st.b.forEach((n,i) => { if(n.act) h+=Cards.html(n.c, ox+xm[i]*40-cw/2, oy+yr[i<3?0:i<9?1:i<18?2:3], i, 'TriPeaks.clk', i); });
+            h+=Cards.html(null, ox-cw-10, oy+250, 0, 'TriPeaks.clk', 's'); if(this.st.s.length) h+=Cards.html(this.st.s[this.st.s.length-1], ox-cw-10, oy+250, 1, 'TriPeaks.clk', 's');
+            if(this.st.w.length) h+=Cards.html(this.st.w[this.st.w.length-1], ox+10, oy+250, 1, 'TriPeaks.clk', 'w');
+            b.innerHTML = h;
         }
     };
 
     const Pyramid = {
-        st: {},
+        st: {}, sel: null,
         init: function() {
-            let d = createDeck();
-            let b = [];
-            for(let i=0; i<28; i++) { let c = d.pop(); c.up = true; c.idx = i; c.active = true; b.push(c); }
-            this.st = { b, s: d, w: [d.pop()], sel: null };
-            this.st.w[0].up = true;
-            this.render();
+            let d = Cards.deck(), b = [];
+            for(let i=0; i<28; i++) { let c=d.pop(); c.up=true; c.idx=i; c.act=true; b.push(c); }
+            this.st = { b, s: d, w: [d.pop()] }; this.st.w[0].up = true; this.sel=null; this.draw();
         },
-        isBlocked: function(idx) {
-            let row = Math.floor((-1 + Math.sqrt(1 + 8*idx)) / 2); // math magic for triangle row
-            let cIdx = idx - (row*(row+1))/2;
-            let l = idx + row + 1, r = idx + row + 2;
-            return (l<28 && this.st.b[l].active) || (r<28 && this.st.b[r].active);
+        chk: function(i) { let r=Math.floor((-1+Math.sqrt(1+8*i))/2), l=i+r+1, rt=i+r+2; return (l<28&&this.st.b[l].act) || (rt<28&&this.st.b[rt].act); },
+        clk: function(l, i) {
+            let s=this.st, c;
+            if(l==='s') { if(s.s.length) { let p=s.s.pop(); p.up=true; s.w.push(p); } else { s.s=s.w.reverse(); s.s.forEach(x=>x.up=false); s.w=[]; } this.sel=null; this.draw(); return; }
+            if(l==='w') c=s.w[s.w.length-1]; if(l==='b') { c=s.b[i]; if(this.chk(i)) return; }
+            if(!c || !c.act) return;
+            if(c.v===13) { c.act=false; if(l==='w') s.w.pop(); this.sel=null; }
+            else if(!this.sel) this.sel={c,l,i};
+            else {
+                if(this.sel.c.id===c.id) this.sel=null;
+                else if(this.sel.c.v+c.v===13) { c.act=false; this.sel.c.act=false; if(l==='w') s.w.pop(); if(this.sel.l==='w') s.w.pop(); this.sel=null; if(s.b.every(x=>!x.act)) app.msg("Victory!","Pyramid solved."); }
+                else this.sel={c,l,i};
+            }
+            this.draw();
         },
-        click: function(loc, idx) {
-            let s = this.st, cObj;
-            if(loc === 's') {
-                if(s.s.length) { let c = s.s.pop(); c.up = true; s.w.push(c); }
-                else { s.s = s.w.reverse(); s.s.forEach(c=>c.up=false); s.w=[]; }
-                s.sel = null; this.render(); return;
-            }
-            if(loc === 'w') cObj = s.w[s.w.length-1];
-            if(loc === 'b') { cObj = s.b[idx]; if(this.isBlocked(idx)) return; }
-            if(!cObj || !cObj.active) return;
-
-            if(cObj.v === 13) {
-                // King self-clear
-                cObj.active = false;
-                if(loc==='w') s.w.pop();
-                s.sel = null;
-            } else if(!s.sel) {
-                s.sel = { c: cObj, loc, idx };
-            } else {
-                if(s.sel.c.id === cObj.id) { s.sel = null; }
-                else if(s.sel.c.v + cObj.v === 13) {
-                    cObj.active = false; s.sel.c.active = false;
-                    if(loc==='w') s.w.pop();
-                    if(s.sel.loc==='w') s.w.pop();
-                    s.sel = null;
-                    if(s.b.every(c=>!c.active)) app.win();
-                } else s.sel = { c: cObj, loc, idx };
-            }
-            this.render();
-        },
-        render: function() {
-            const bd = $('board-pyramid'); bd.innerHTML = '';
-            let {cw, ch} = CardEngine.dims();
-            let ox = board.clientWidth/2, oy = 20;
-
-            // Render Pyramid
-            let idx = 0;
-            for(let r=0; r<7; r++) {
-                let startX = ox - (r*(cw+10))/2;
-                for(let c=0; c<=r; c++) {
-                    let card = this.st.b[idx];
-                    if(card.active) {
-                        let html = renderCard(card, startX + c*(cw+10) - cw/2, oy + r*(ch/2), idx, 'Pyramid.click', 'b', idx);
-                        if(this.st.sel && this.st.sel.c.id === card.id) html = html.replace('class="card', 'class="card selected');
-                        bd.innerHTML += html;
-                    }
-                    idx++;
-                }
-            }
-
-            // Stock / Waste
-            let by = oy + 7*(ch/2) + 20;
-            bd.innerHTML += renderCard(null, ox - cw - 10, by, 0, 'Pyramid.click', 's', 0);
-            if(this.st.s.length) bd.innerHTML += renderCard(this.st.s[this.st.s.length-1], ox - cw - 10, by, 1, 'Pyramid.click', 's', 0);
-            
-            if(this.st.w.length) {
-                let wHtml = renderCard(this.st.w[this.st.w.length-1], ox + 10, by, 1, 'Pyramid.click', 'w', 0);
-                if(this.st.sel && this.st.sel.loc === 'w') wHtml = wHtml.replace('class="card', 'class="card selected');
-                bd.innerHTML += wHtml;
-            }
+        draw: function() {
+            let b=$('b-pyramid'), h='', w=b.clientWidth, cw=70, ch=100, ox=w/2, oy=20, i=0;
+            for(let r=0; r<7; r++) { let sx=ox-(r*75)/2; for(let c=0; c<=r; c++) { let cd=this.st.b[i]; if(cd.act) h+=Cards.html(cd, sx+c*75-cw/2, oy+r*45, i, 'Pyramid.clk', 'b', i, this.sel?.c.id); i++; } }
+            h+=Cards.html(null, ox-cw-10, oy+350, 0, 'Pyramid.clk', 's', 0); if(this.st.s.length) h+=Cards.html(this.st.s[this.st.s.length-1], ox-cw-10, oy+350, 1, 'Pyramid.clk', 's', 0);
+            if(this.st.w.length) h+=Cards.html(this.st.w[this.st.w.length-1], ox+10, oy+350, 1, 'Pyramid.clk', 'w', 0, this.sel?.c.id);
+            b.innerHTML = h;
         }
     };
 
     const Bubble = {
-        running: false, b: [], c: null, w: 400, h: 600, colors: ['#ef4444','#3b82f6','#10b981','#eab308','#a855f7'],
-        r: 16, a: Math.PI/2,
+        r: false, b: [], c: null, w: 600, h: 800, cols: ['#ef4444','#3b82f6','#10b981','#eab308','#a855f7'], rad: 20, a: Math.PI/2, sc: 0,
         init: function() {
-            this.b = [];
-            for(let row=0; row<5; row++) {
-                let cols = row%2 ? 11 : 12;
-                for(let c=0; c<cols; c++) {
-                    this.b.push({ x: 24 + c*32 + (row%2?16:0), y: 24 + row*28, color: this.colors[Math.floor(Math.random()*this.colors.length)] });
-                }
-            }
-            this.spawn(); this.running = true;
-            $('c-bubble').addEventListener('mousemove', e => {
-                const rect = e.target.getBoundingClientRect();
-                const x = e.clientX - rect.left, y = e.clientY - rect.top;
-                this.a = Math.atan2(y - 580, x - 200);
-            });
-            $('c-bubble').addEventListener('click', () => { if(this.c && !this.c.dx) { this.c.dx = Math.cos(this.a)*15; this.c.dy = Math.sin(this.a)*15; } });
+            this.b=[]; this.sc=0; $('bub-score').innerText='Score: 0';
+            for(let r=0; r<6; r++) { let cls=r%2?13:14; for(let c=0; c<cls; c++) this.b.push({x: 30+c*40+(r%2?20:0), y: 30+r*35, c: this.cols[Math.floor(Math.random()*this.cols.length)]}); }
+            this.sp(); this.r=true;
+            $('c-bubble').onmousemove=e=>{ const rt=e.target.getBoundingClientRect(); this.a=Math.atan2(e.clientY-rt.top-750, e.clientX-rt.left-300); };
+            $('c-bubble').onclick=()=>{ if(this.c && !this.c.dx) { this.c.dx=Math.cos(this.a)*20; this.c.dy=Math.sin(this.a)*20; } };
             requestAnimationFrame(()=>this.loop());
         },
-        spawn: function() { this.c = { x: 200, y: 580, dx: 0, dy: 0, color: this.colors[Math.floor(Math.random()*this.colors.length)] }; },
+        sp: function() { this.c = { x:300, y:750, dx:0, dy:0, c: this.cols[Math.floor(Math.random()*this.cols.length)] }; },
         loop: function() {
-            if(!this.running) return;
-            const ct = ctx('c-bubble');
-            ct.clearRect(0,0,this.w,this.h);
-            
-            // Render Bubbles
-            this.b.forEach(b => { ct.beginPath(); ct.arc(b.x, b.y, this.r, 0, Math.PI*2); ct.fillStyle = b.color; ct.fill(); ct.stroke(); });
-            
-            // Cannon Aim
-            ct.beginPath(); ct.moveTo(200, 580); ct.lineTo(200 + Math.cos(this.a)*50, 580 + Math.sin(this.a)*50); ct.strokeStyle='#fff'; ct.lineWidth=2; ct.stroke();
-            
-            // Active Bubble
+            if(!this.r) return; const ct=ctx('c-bubble'); ct.clearRect(0,0,this.w,this.h);
+            this.b.forEach(b=>{ ct.beginPath(); ct.arc(b.x,b.y,this.rad,0,Math.PI*2); ct.fillStyle=b.c; ct.fill(); ct.stroke(); });
+            ct.beginPath(); ct.moveTo(300,750); ct.lineTo(300+Math.cos(this.a)*60, 750+Math.sin(this.a)*60); ct.strokeStyle='#fff'; ct.lineWidth=3; ct.stroke();
             if(this.c) {
-                this.c.x += this.c.dx; this.c.y += this.c.dy;
-                if(this.c.x < this.r || this.c.x > this.w - this.r) this.c.dx *= -1; // bounce
-                
-                // Collision
-                let hit = this.c.y < this.r;
-                if(!hit) this.b.forEach(b => {
-                    if(Math.hypot(b.x - this.c.x, b.y - this.c.y) < this.r*2) hit = true;
-                });
-
+                this.c.x+=this.c.dx; this.c.y+=this.c.dy;
+                if(this.c.x<this.rad || this.c.x>this.w-this.rad) this.c.dx*=-1;
+                let hit = this.c.y<this.rad;
+                if(!hit) this.b.forEach(b=>{ if(Math.hypot(b.x-this.c.x, b.y-this.c.y)<this.rad*2) hit=true; });
                 if(hit) {
-                    this.c.dx = 0; this.c.dy = 0;
-                    // Snap to grid approximation for tiny code size
-                    this.c.y = Math.floor(this.c.y / 28) * 28 + 24;
-                    let row = Math.floor((this.c.y - 24)/28);
-                    this.c.x = Math.floor((this.c.x - (row%2?16:0)) / 32) * 32 + 24 + (row%2?16:0);
-                    this.b.push(this.c);
-                    // Match check logic omitted for absolute strict size constraints (Requires BFS flood fill), just snap.
-                    this.spawn();
+                    this.c.dx=0; this.c.dy=0;
+                    this.c.y = Math.floor(this.c.y/35)*35+30; let ro=Math.floor((this.c.y-30)/35);
+                    this.c.x = Math.floor((this.c.x-(ro%2?20:0))/40)*40+30+(ro%2?20:0);
+                    this.b.push(this.c); this.sc+=10; $('bub-score').innerText='Score: '+this.sc;
+                    if(this.c.y>700) { this.r=false; app.msg("Game Over", `Score: ${this.sc}`, "text-red-500"); } else this.sp();
                 }
-                
-                ct.beginPath(); ct.arc(this.c.x, this.c.y, this.r, 0, Math.PI*2); ct.fillStyle = this.c.color; ct.fill();
+                ct.beginPath(); ct.arc(this.c.x,this.c.y,this.rad,0,Math.PI*2); ct.fillStyle=this.c.c; ct.fill();
             }
             requestAnimationFrame(()=>this.loop());
         }
     };
 
-    const Tetris = {
-        running: false, grid: [], p: null, score: 0,
-        shapes: [ [[1,1,1,1]], [[1,1],[1,1]], [[0,1,0],[1,1,1]], [[1,0,0],[1,1,1]], [[0,0,1],[1,1,1]], [[1,1,0],[0,1,1]], [[0,1,1],[1,1,0]] ],
-        colors: ['cyan','yellow','purple','blue','orange','green','red'],
+    const Gravity = {
+        r: false, g: [], p: null, sc: 0, lst: 0,
+        s: [[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]],[[1,1,0],[0,1,1]],[[0,1,1],[1,1,0]]],
+        c: ['cyan','yellow','purple','blue','orange','green','red'],
         init: function() {
-            this.grid = Array.from({length:20}, ()=>Array(10).fill(0));
-            this.score = 0; $('tet-score').innerText = '0'; $('tet-overlay').classList.add('hidden');
-            this.spawn(); this.running = true;
-            if(!this.bound) { document.addEventListener('keydown', e => this.key(e)); this.bound = true; }
-            this.last = Date.now();
+            this.g=Array.from({length:20},()=>Array(10).fill(0)); this.sc=0; $('grav-score').innerText='Score: 0';
+            this.sp(); this.r=true; this.lst=Date.now();
             requestAnimationFrame(()=>this.loop());
         },
-        spawn: function() {
-            let r = Math.floor(Math.random()*this.shapes.length);
-            this.p = { s: this.shapes[r], c: r+1, x: 4, y: 0 };
-            if(this.collide(0,0)) { this.running = false; $('tet-overlay').classList.remove('hidden'); }
+        sp: function() { let r=Math.floor(Math.random()*this.s.length); this.p={s:this.s[r], c:r+1, x:3, y:0}; if(this.col(0,0)) { this.r=false; app.msg("Game Over",`Score: ${this.sc}`,"text-red-500"); } },
+        col: function(dx,dy,s=this.p.s) { for(let r=0;r<s.length;r++) for(let c=0;c<s[r].length;c++) if(s[r][c] && (this.p.x+c+dx<0 || this.p.x+c+dx>=10 || this.p.y+r+dy>=20 || (this.p.y+r+dy>=0 && this.g[this.p.y+r+dy][this.p.x+c+dx]))) return true; return false; },
+        mrg: function() {
+            this.p.s.forEach((r,ri)=>r.forEach((v,ci)=>{ if(v) this.g[this.p.y+ri][this.p.x+ci]=this.p.c; }));
+            let cl=0; for(let r=19;r>=0;r--) if(this.g[r].every(v=>v!==0)) { this.g.splice(r,1); this.g.unshift(Array(10).fill(0)); cl++; r++; }
+            if(cl) { this.sc+=[0,100,300,500,800][cl]; $('grav-score').innerText='Score: '+this.sc; }
+            this.sp();
         },
-        collide: function(dx, dy, shape = this.p.s) {
-            for(let r=0; r<shape.length; r++) {
-                for(let c=0; c<shape[r].length; c++) {
-                    if(shape[r][c]) {
-                        let nx = this.p.x + c + dx, ny = this.p.y + r + dy;
-                        if(nx < 0 || nx >= 10 || ny >= 20 || (ny >= 0 && this.grid[ny][nx])) return true;
-                    }
-                }
-            }
-            return false;
-        },
-        merge: function() {
-            this.p.s.forEach((row, r) => row.forEach((val, c) => { if(val) this.grid[this.p.y+r][this.p.x+c] = this.p.c; }));
-            let cleared = 0;
-            for(let r=19; r>=0; r--) {
-                if(this.grid[r].every(v => v !== 0)) { this.grid.splice(r, 1); this.grid.unshift(Array(10).fill(0)); cleared++; r++; }
-            }
-            if(cleared) { this.score += [0,100,300,500,800][cleared]; $('tet-score').innerText = this.score; }
-            this.spawn();
-        },
-        input: function(dx, dy) {
-            if(!this.running) return;
-            if(!this.collide(dx, dy)) { this.p.x += dx; this.p.y += dy; }
-            else if(dy > 0) this.merge();
-        },
-        rotate: function() {
-            if(!this.running) return;
-            let ns = this.p.s[0].map((_, i) => this.p.s.map(r => r[i]).reverse());
-            if(!this.collide(0,0, ns)) this.p.s = ns;
-        },
-        key: function(e) {
-            if(app.current !== 'tetris') return;
-            if(e.key==='ArrowLeft') this.input(-1,0);
-            if(e.key==='ArrowRight') this.input(1,0);
-            if(e.key==='ArrowDown') this.input(0,1);
-            if(e.key==='ArrowUp') this.rotate();
+        inp: function() {
+            if(!this.r) return;
+            if(keys['ArrowLeft']) { if(!this.col(-1,0)) this.p.x--; keys['ArrowLeft']=false; }
+            if(keys['ArrowRight']) { if(!this.col(1,0)) this.p.x++; keys['ArrowRight']=false; }
+            if(keys['ArrowDown']) { if(!this.col(0,1)) this.p.y++; else this.mrg(); }
+            if(keys['ArrowUp']) { let ns=this.p.s[0].map((_,i)=>this.p.s.map(r=>r[i]).reverse()); if(!this.col(0,0,ns)) this.p.s=ns; keys['ArrowUp']=false; }
         },
         loop: function() {
-            if(!this.running) return;
-            let now = Date.now();
-            if(now - this.last > 500) { this.input(0,1); this.last = now; }
-            
-            const ct = ctx('c-tetris'); ct.clearRect(0,0,300,600);
-            const draw = (x,y,c) => { ct.fillStyle = this.colors[c-1]; ct.fillRect(x*30, y*30, 29, 29); };
-            
-            this.grid.forEach((row, r) => row.forEach((val, c) => { if(val) draw(c, r, val); }));
-            this.p.s.forEach((row, r) => row.forEach((val, c) => { if(val) draw(this.p.x+c, this.p.y+r, this.p.c); }));
-            
+            if(!this.r) return; let now=Date.now();
+            this.inp(); if(now-this.lst>500) { if(!this.col(0,1)) this.p.y++; else this.mrg(); this.lst=now; }
+            const ct=ctx('c-gravity'); ct.clearRect(0,0,300,600);
+            const dr=(x,y,c)=>{ ct.fillStyle=this.c[c-1]; ct.fillRect(x*30,y*30,29,29); };
+            this.g.forEach((r,ri)=>r.forEach((v,ci)=>{ if(v) dr(ci,ri,v); }));
+            this.p.s.forEach((r,ri)=>r.forEach((v,ci)=>{ if(v) dr(this.p.x+ci,this.p.y+ri,this.p.c); }));
             requestAnimationFrame(()=>this.loop());
         }
     };
 
     const Jewel = {
-        grid: [], em: ['💎','🟩','🔶','💜','🔴','🌟'], sel: null, score: 0,
+        g: [], em: ['💎','🟩','🔶','💜','🔴','🌟'], sel: null, sc: 0,
         init: function() {
-            this.grid = Array.from({length:8}, ()=>Array.from({length:8}, ()=>Math.floor(Math.random()*this.em.length)));
-            this.score = 0; $('jw-score').innerText = 'Score: 0'; this.sel = null;
-            this.render();
+            this.g=Array.from({length:8},()=>Array.from({length:8},()=>Math.floor(Math.random()*this.em.length)));
+            this.sc=0; $('jw-score').innerText='Score: 0'; this.sel=null; this.draw();
         },
-        click: function(r, c) {
-            if(!this.sel) { this.sel = {r,c}; this.render(); return; }
-            let dr = Math.abs(this.sel.r - r), dc = Math.abs(this.sel.c - c);
-            if((dr===1 && dc===0) || (dr===0 && dc===1)) {
-                // Swap
-                let t = this.grid[r][c]; this.grid[r][c] = this.grid[this.sel.r][this.sel.c]; this.grid[this.sel.r][this.sel.c] = t;
-                // Complex match logic omitted for ultra-compact build, simplistic random points granted for visual feedback
-                this.score += 50; $('jw-score').innerText = 'Score: ' + this.score;
+        clk: function(r,c) {
+            if(!this.sel) { this.sel={r,c}; this.draw(); return; }
+            let dr=Math.abs(this.sel.r-r), dc=Math.abs(this.sel.c-c);
+            if((dr===1&&dc===0) || (dr===0&&dc===1)) {
+                let t=this.g[r][c]; this.g[r][c]=this.g[this.sel.r][this.sel.c]; this.g[this.sel.r][this.sel.c]=t;
+                this.sc+=50; $('jw-score').innerText='Score: '+this.sc;
+                this.g[r][c]=Math.floor(Math.random()*this.em.length); // Instant replacement for demo
             }
-            this.sel = null; this.render();
+            this.sel=null; this.draw();
         },
-        render: function() {
-            let b = $('board-jewel'); b.innerHTML = '';
-            for(let r=0; r<8; r++) for(let c=0; c<8; c++) {
-                let isSel = this.sel && this.sel.r===r && this.sel.c===c;
-                b.innerHTML += `<div class="grid-cell ${isSel?'sel':''}" style="width:40px;height:40px" onclick="Jewel.click(${r},${c})">${this.em[this.grid[r][c]]}</div>`;
-            }
+        draw: function() {
+            let b=$('b-jewel'), h='';
+            for(let r=0; r<8; r++) for(let c=0; c<8; c++) h+=`<div class="grid-cell ${this.sel&&this.sel.r===r&&this.sel.c===c?'sel':''}" style="width:50px;height:50px" onclick="Jewel.clk(${r},${c})">${this.em[this.g[r][c]]}</div>`;
+            b.innerHTML=h;
         }
     };
 
     const GemDrop = {
-        grid: [], em: ['#ef4444','#3b82f6','#10b981','#eab308'], score: 0,
+        g: [], em: ['#ef4444','#3b82f6','#10b981','#eab308'], sc: 0,
         init: function() {
-            this.grid = Array.from({length:10}, ()=>Array.from({length:10}, ()=>Math.floor(Math.random()*this.em.length)));
-            this.score = 0; $('gd-score').innerText = 'Score: 0'; this.render();
+            this.g=Array.from({length:10},()=>Array.from({length:12},()=>Math.floor(Math.random()*this.em.length)));
+            this.sc=0; $('gd-score').innerText='Score: 0'; this.draw();
         },
-        click: function(r, c) {
-            let color = this.grid[r][c];
-            if(color === -1) return;
-            // Simple flood fill and remove (BFS)
-            let q = [[r,c]], fill = [];
-            let visited = Array.from({length:10}, ()=>Array(10).fill(false));
-            visited[r][c] = true;
-            
-            while(q.length > 0) {
-                let [cr, cc] = q.shift();
-                fill.push([cr,cc]);
-                const dirs = [[0,1],[1,0],[0,-1],[-1,0]];
-                for(let [dr,dc] of dirs) {
-                    let nr=cr+dr, nc=cc+dc;
-                    if(nr>=0&&nr<10&&nc>=0&&nc<10 && !visited[nr][nc] && this.grid[nr][nc]===color) {
-                        visited[nr][nc] = true; q.push([nr,nc]);
-                    }
-                }
+        clk: function(r,c) {
+            let col=this.g[r][c]; if(col===-1) return;
+            let q=[[r,c]], f=[], v=Array.from({length:10},()=>Array(12).fill(false)); v[r][c]=true;
+            while(q.length>0) {
+                let [cr,cc]=q.shift(); f.push([cr,cc]);
+                [[0,1],[1,0],[0,-1],[-1,0]].forEach(([dr,dc])=>{ let nr=cr+dr,nc=cc+dc; if(nr>=0&&nr<10&&nc>=0&&nc<12&&!v[nr][nc]&&this.g[nr][nc]===col){v[nr][nc]=true;q.push([nr,nc]);} });
             }
-            
-            if(fill.length > 1) {
-                fill.forEach(([fr,fc]) => this.grid[fr][fc] = -1);
-                this.score += fill.length * 10; $('gd-score').innerText = 'Score: ' + this.score;
-                this.gravity(); this.render();
-            }
+            if(f.length>1) { f.forEach(([fr,fc])=>this.g[fr][fc]=-1); this.sc+=f.length*10; $('gd-score').innerText='Score: '+this.sc; this.grav(); this.draw(); }
         },
-        gravity: function() {
-            for(let c=0; c<10; c++) {
-                let colData = [];
-                for(let r=0; r<10; r++) if(this.grid[r][c] !== -1) colData.push(this.grid[r][c]);
-                while(colData.length < 10) colData.unshift(-1);
-                for(let r=0; r<10; r++) this.grid[r][c] = colData[r];
-            }
+        grav: function() {
+            for(let c=0; c<12; c++) { let d=[]; for(let r=0; r<10; r++) if(this.g[r][c]!==-1) d.push(this.g[r][c]); while(d.length<10) d.unshift(-1); for(let r=0; r<10; r++) this.g[r][c]=d[r]; }
         },
-        render: function() {
-            let b = $('board-gemdrop'); b.innerHTML = '';
-            for(let r=0; r<10; r++) for(let c=0; c<10; c++) {
-                let bg = this.grid[r][c] === -1 ? 'transparent' : this.em[this.grid[r][c]];
-                b.innerHTML += `<div class="grid-cell" style="width:32px;height:32px;background:${bg};border-radius:4px" onclick="GemDrop.click(${r},${c})"></div>`;
-            }
+        draw: function() {
+            let b=$('b-gemdrop'), h='';
+            for(let r=0; r<10; r++) for(let c=0; c<12; c++) h+=`<div class="grid-cell" style="width:40px;height:40px;background:${this.g[r][c]===-1?'transparent':this.em[this.g[r][c]]}" onclick="GemDrop.clk(${r},${c})"></div>`;
+            b.innerHTML=h;
         }
     };
 
     const Mahjong = {
         t: [], sel: null,
         init: function() {
-            let types = ['🔴1','🔴2','🔴3','🔴4','🔴5','🔴6','🔴7','🔴8','🔴9',
-                         '🟢1','🟢2','🟢3','🟢4','🟢5','🟢6','🟢7','🟢8','🟢9',
-                         '🔵1','🔵2','🔵3','🔵4','🔵5','🔵6','🔵7','🔵8','🔵9',
-                         '🀄','⬛','⬜','🌸','🍁','❄️','☀️','🐉','🐅'];
-            let pool = []; types.forEach(ty => { pool.push(ty, ty, ty, ty); });
-            for(let i=pool.length-1; i>0; i--) { let j = Math.floor(Math.random()*(i+1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-            
-            // Simplified pyramid layout (144 tiles exactly)
+            let ty = ['🔴1','🔴2','🔴3','🔴4','🔴5','🔴6','🔴7','🔴8','🔴9','🟢1','🟢2','🟢3','🟢4','🟢5','🟢6','🟢7','🟢8','🟢9','🔵1','🔵2','🔵3','🔵4','🔵5','🔵6','🔵7','🔵8','🔵9','🀄','⬛','⬜','🌸','🍁','❄️','☀️','🐉','🐅'];
+            let p = []; ty.forEach(t=>{p.push(t,t,t,t);}); for(let i=p.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[p[i],p[j]]=[p[j],p[i]];}
             this.t = [];
-            // L0 (12x8 = 96)
-            for(let x=1; x<13; x++) for(let y=1; y<9; y++) this.t.push({ x:x*48, y:y*60, z:0, v:pool.pop(), id: Math.random(), act:true });
-            // L1 (8x6 = 48)
-            for(let x=3; x<11; x++) for(let y=2; y<8; y++) this.t.push({ x:x*48 + 24, y:y*60 + 30, z:1, v:pool.pop(), id: Math.random(), act:true });
-            
-            this.sel = null; this.render();
+            for(let x=1; x<13; x++) for(let y=1; y<9; y++) this.t.push({x:x*50, y:y*65, z:0, v:p.pop(), id:Math.random(), act:true});
+            for(let x=3; x<11; x++) for(let y=2; y<8; y++) this.t.push({x:x*50+25, y:y*65+32, z:1, v:p.pop(), id:Math.random(), act:true});
+            this.sel=null; this.draw();
         },
-        isFree: function(tile) {
-            // A tile is blocked if there's any active tile directly above it (z+1),
-            // OR if it has active tiles on BOTH left and right (same z).
-            let above = this.t.some(o => o.act && o.z > tile.z && Math.abs(o.x - tile.x) < 44 && Math.abs(o.y - tile.y) < 56);
-            if(above) return false;
-            let left = this.t.some(o => o.act && o.z === tile.z && o.x < tile.x && Math.abs(o.x + 44 - tile.x) < 5 && Math.abs(o.y - tile.y) < 56);
-            let right = this.t.some(o => o.act && o.z === tile.z && o.x > tile.x && Math.abs(tile.x + 44 - o.x) < 5 && Math.abs(o.y - tile.y) < 56);
-            return !(left && right);
+        free: function(t) {
+            if(this.t.some(o=>o.act && o.z>t.z && Math.abs(o.x-t.x)<48 && Math.abs(o.y-t.y)<60)) return false;
+            let l=this.t.some(o=>o.act && o.z===t.z && o.x<t.x && Math.abs(o.x+50-t.x)<5 && Math.abs(o.y-t.y)<60);
+            let r=this.t.some(o=>o.act && o.z===t.z && o.x>t.x && Math.abs(t.x+50-o.x)<5 && Math.abs(o.y-t.y)<60);
+            return !(l&&r);
         },
-        click: function(id) {
-            let tile = this.t.find(o => o.id === id);
-            if(!tile || !tile.act || !this.isFree(tile)) return;
-
-            if(!this.sel) { this.sel = tile; this.render(); }
+        clk: function(id) {
+            let t=this.t.find(o=>o.id===id); if(!t || !t.act || !this.free(t)) return;
+            if(!this.sel) { this.sel=t; this.draw(); }
             else {
-                if(this.sel.id === tile.id) { this.sel = null; this.render(); }
-                else if(this.sel.v === tile.v) {
-                    tile.act = false; this.sel.act = false; this.sel = null;
-                    let rem = this.t.filter(o=>o.act).length;
-                    $('mj-rem').innerText = 'Tiles: ' + rem;
-                    if(rem === 0) app.win();
-                    this.render();
-                } else { this.sel = tile; this.render(); }
+                if(this.sel.id===t.id) this.sel=null;
+                else if(this.sel.v===t.v) { t.act=false; this.sel.act=false; this.sel=null; let rem=this.t.filter(o=>o.act).length; $('mj-rem').innerText='Tiles: '+rem; if(rem===0) app.msg("Victory!","Mahjong cleared."); }
+                else this.sel=t;
+                this.draw();
             }
         },
-        render: function() {
-            let b = $('board-mahjong'); b.innerHTML = '';
-            // Sort by Z then Y then X for proper CSS overlapping render order
-            let sorted = [...this.t].sort((a,b) => a.z !== b.z ? a.z - b.z : (a.y !== b.y ? a.y - b.y : a.x - b.x));
-            
-            let ox = (board.clientWidth - (14*48))/2;
-            
-            sorted.forEach(t => {
-                if(!t.act) return;
-                let free = this.isFree(t);
-                let cls = `mj-tile ${!free?'blocked':''} ${this.sel&&this.sel.id===t.id?'sel':''}`;
-                b.innerHTML += `<div class="${cls}" style="left:${ox + t.x}px; top:${t.y}px; z-index:${t.z}" onclick="Mahjong.click(${t.id})">
-                    <span style="font-size:20px">${t.v.slice(0,-1)}</span><span>${t.v.slice(-1)}</span>
-                </div>`;
-            });
+        draw: function() {
+            let b=$('b-mahjong'), h='', ox=(b.clientWidth-(14*50))/2;
+            [...this.t].sort((a,b)=>a.z!==b.z?a.z-b.z:(a.y!==b.y?a.y-b.y:a.x-b.x)).forEach(t=>{
+                if(t.act) h+=`<div class="mj-tile ${!this.free(t)?'blocked':''} ${this.sel&&this.sel.id===t.id?'sel':''}" style="left:${ox+t.x}px;top:${t.y}px;z-index:${t.z}" onclick="Mahjong.clk(${t.id})"><span style="font-size:24px">${t.v.slice(0,-1)}</span><span>${t.v.slice(-1)}</span></div>`;
+            }); b.innerHTML=h;
         }
     };
 
-    // Auto-start
-    const board = $('main');
+    const Pong = {
+        r: false, p1: 0, p2: 0, s1: 0, s2: 0, bx: 500, by: 300, bdx: 5, bdy: 5,
+        init: function() { this.p1=250; this.p2=250; this.s1=0; this.s2=0; this.bx=500; this.by=300; this.bdx=6; this.bdy=6; this.r=true; $('pong-score').innerText='0 - 0'; requestAnimationFrame(()=>this.loop()); },
+        loop: function() {
+            if(!this.r) return; const ct=ctx('c-pong'); ct.clearRect(0,0,1000,600);
+            if(keys['KeyW'] && this.p1>0) this.p1-=8; if(keys['KeyS'] && this.p1<500) this.p1+=8;
+            if(keys['ArrowUp'] && this.p2>0) this.p2-=8; if(keys['ArrowDown'] && this.p2<500) this.p2+=8;
+            
+            this.bx+=this.bdx; this.by+=this.bdy;
+            if(this.by<=0 || this.by>=590) this.bdy*=-1;
+            
+            if(this.bx<=40 && this.by>=this.p1 && this.by<=this.p1+100) { this.bdx*=-1.1; this.bx=40; }
+            if(this.bx>=950 && this.by>=this.p2 && this.by<=this.p2+100) { this.bdx*=-1.1; this.bx=950; }
+            
+            if(this.bx<0) { this.s2++; this.rst(); } if(this.bx>1000) { this.s1++; this.rst(); }
+            $('pong-score').innerText = `${this.s1} - ${this.s2}`;
+            
+            ct.fillStyle='#fff'; ct.fillRect(20, this.p1, 20, 100); ct.fillRect(960, this.p2, 20, 100);
+            ct.beginPath(); ct.arc(this.bx, this.by, 10, 0, Math.PI*2); ct.fill();
+            ct.setLineDash([10, 15]); ct.beginPath(); ct.moveTo(500,0); ct.lineTo(500,600); ct.strokeStyle='#555'; ct.lineWidth=5; ct.stroke();
+            
+            if(this.s1>=5 || this.s2>=5) { this.r=false; app.msg("Game Over", `Player ${this.s1>=5?1:2} Wins!`); }
+            else requestAnimationFrame(()=>this.loop());
+        },
+        rst: function() { this.bx=500; this.by=300; this.bdx=(this.bdx>0?-6:6); this.bdy=(Math.random()>0.5?6:-6); }
+    };
+
+    const Dogfight = {
+        r: false, p1: null, p2: null, b: [],
+        init: function() {
+            this.p1={x:100, y:350, a:0, hp:10, c:'#3b82f6', cd:0}; this.p2={x:900, y:350, a:Math.PI, hp:10, c:'#ef4444', cd:0};
+            this.b=[]; this.r=true; requestAnimationFrame(()=>this.loop());
+        },
+        loop: function() {
+            if(!this.r) return; const ct=ctx('c-dogfight'); ct.clearRect(0,0,1000,700);
+            
+            const up=(p, lf, rt, fw, sh)=>{
+                if(keys[lf]) p.a-=0.08; if(keys[rt]) p.a+=0.08;
+                if(keys[fw]) { p.x+=Math.cos(p.a)*6; p.y+=Math.sin(p.a)*6; }
+                if(keys[sh] && p.cd<=0) { this.b.push({x:p.x, y:p.y, a:p.a, o:p}); p.cd=15; }
+                if(p.cd>0) p.cd--;
+                if(p.x<0) p.x=1000; if(p.x>1000) p.x=0; if(p.y<0) p.y=700; if(p.y>700) p.y=0;
+            };
+            up(this.p1, 'KeyA', 'KeyD', 'KeyW', 'Space'); up(this.p2, 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'Enter');
+            
+            for(let i=this.b.length-1; i>=0; i--) {
+                let bl=this.b[i]; bl.x+=Math.cos(bl.a)*15; bl.y+=Math.sin(bl.a)*15;
+                ct.fillStyle='#fff'; ct.fillRect(bl.x, bl.y, 4, 4);
+                let tgt = bl.o===this.p1 ? this.p2 : this.p1;
+                if(Math.hypot(bl.x-tgt.x, bl.y-tgt.y)<20) { tgt.hp--; this.b.splice(i,1); }
+                else if(bl.x<0||bl.x>1000||bl.y<0||bl.y>700) this.b.splice(i,1);
+            }
+
+            const dr=(p)=>{
+                ct.save(); ct.translate(p.x, p.y); ct.rotate(p.a);
+                ct.fillStyle=p.c; ct.beginPath(); ct.moveTo(20,0); ct.lineTo(-15,15); ct.lineTo(-10,0); ct.lineTo(-15,-15); ct.fill();
+                ct.restore();
+                ct.fillStyle='#555'; ct.fillRect(p.x-25, p.y-30, 50, 5); ct.fillStyle='#10b981'; ct.fillRect(p.x-25, p.y-30, p.hp*5, 5);
+            };
+            dr(this.p1); dr(this.p2);
+
+            if(this.p1.hp<=0 || this.p2.hp<=0) { this.r=false; app.msg("Dogfight Over", `Player ${this.p1.hp>0?1:2} Wins!`); }
+            else requestAnimationFrame(()=>this.loop());
+        }
+    };
+
     window.onload = () => app.show('klondike');
 </script>
 </body>
